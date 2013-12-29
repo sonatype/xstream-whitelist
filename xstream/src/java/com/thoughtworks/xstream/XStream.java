@@ -25,8 +25,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -86,14 +84,10 @@ import com.thoughtworks.xstream.converters.collections.SingletonMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeSetConverter;
 import com.thoughtworks.xstream.converters.extended.ColorConverter;
-import com.thoughtworks.xstream.converters.extended.DynamicProxyConverter;
 import com.thoughtworks.xstream.converters.extended.EncodedByteArrayConverter;
 import com.thoughtworks.xstream.converters.extended.FileConverter;
 import com.thoughtworks.xstream.converters.extended.FontConverter;
 import com.thoughtworks.xstream.converters.extended.GregorianCalendarConverter;
-import com.thoughtworks.xstream.converters.extended.JavaClassConverter;
-import com.thoughtworks.xstream.converters.extended.JavaFieldConverter;
-import com.thoughtworks.xstream.converters.extended.JavaMethodConverter;
 import com.thoughtworks.xstream.converters.extended.LocaleConverter;
 import com.thoughtworks.xstream.converters.extended.LookAndFeelConverter;
 import com.thoughtworks.xstream.converters.extended.SqlDateConverter;
@@ -660,10 +654,13 @@ public class XStream {
 
         alias("string-buffer", StringBuffer.class);
         alias("string", String.class);
-        alias("java-class", Class.class);
-        alias("method", Method.class);
-        alias("constructor", Constructor.class);
-        alias("field", Field.class);
+
+        // Disable java.lang.reflect aliases
+        //alias("java-class", Class.class);
+        //alias("method", Method.class);
+        //alias("constructor", Constructor.class);
+        //alias("field", Field.class);
+
         alias("date", Date.class);
         alias("uri", URI.class);
         alias("url", URL.class);
@@ -789,11 +786,14 @@ public class XStream {
             registerConverter(new SqlTimeConverter(), PRIORITY_NORMAL);
             registerConverter(new SqlDateConverter(), PRIORITY_NORMAL);
         }
-        registerConverter(
-            new DynamicProxyConverter(mapper, classLoaderReference), PRIORITY_NORMAL);
-        registerConverter(new JavaClassConverter(classLoaderReference), PRIORITY_NORMAL);
-        registerConverter(new JavaMethodConverter(classLoaderReference), PRIORITY_NORMAL);
-        registerConverter(new JavaFieldConverter(classLoaderReference), PRIORITY_NORMAL);
+
+        // disable java.lang.reflect converters
+        //registerConverter(
+        //    new DynamicProxyConverter(mapper, classLoaderReference), PRIORITY_NORMAL);
+        //registerConverter(new JavaClassConverter(classLoaderReference), PRIORITY_NORMAL);
+        //registerConverter(new JavaMethodConverter(classLoaderReference), PRIORITY_NORMAL);
+        //registerConverter(new JavaFieldConverter(classLoaderReference), PRIORITY_NORMAL);
+
         if (JVM.isAWTAvailable()) {
             registerConverter(new FontConverter(mapper), PRIORITY_NORMAL);
             registerConverter(new ColorConverter(), PRIORITY_NORMAL);
