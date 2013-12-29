@@ -22,6 +22,16 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>dom4j</groupId>
       <artifactId>dom4j</artifactId>
       <optional>true</optional>
@@ -112,6 +122,12 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -241,19 +257,19 @@
       </activation>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
+          <!--<plugin>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-javadoc-plugin</artifactId>-->
+            <!--<executions>-->
+              <!--<execution>-->
+                <!--<id>attach-javadocs</id>-->
+                <!--<phase>package</phase>-->
+                <!--<goals>-->
+                  <!--<goal>jar</goal>-->
+                <!--</goals>-->
+              <!--</execution>-->
+            <!--</executions>-->
+          <!--</plugin>-->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
@@ -337,31 +353,31 @@
     </profile>
   </profiles>
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${version.plugin.maven.javadoc}</version>
-        <configuration>
-          <excludePackageNames>com.thoughtworks.xstream.core.util</excludePackageNames>
-          <source>${version.java.source}</source>
-          <links>
-            <link>${link.javadoc.javase}</link>
-          </links>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-report-plugin</artifactId>
-        <version>${version.plugin.maven.surefire}</version>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>${version.plugin.mojo.cobertura}</version>
-      </plugin>
-    </plugins>
-  </reporting>
+  <!--<reporting>-->
+    <!--<plugins>-->
+      <!--<plugin>-->
+        <!--<groupId>org.apache.maven.plugins</groupId>-->
+        <!--<artifactId>maven-javadoc-plugin</artifactId>-->
+        <!--<version>${version.plugin.maven.javadoc}</version>-->
+        <!--<configuration>-->
+          <!--<excludePackageNames>com.thoughtworks.xstream.core.util</excludePackageNames>-->
+          <!--<source>${version.java.source}</source>-->
+          <!--<links>-->
+            <!--<link>${link.javadoc.javase}</link>-->
+          <!--</links>-->
+        <!--</configuration>-->
+      <!--</plugin>-->
+      <!--<plugin>-->
+        <!--<groupId>org.apache.maven.plugins</groupId>-->
+        <!--<artifactId>maven-surefire-report-plugin</artifactId>-->
+        <!--<version>${version.plugin.maven.surefire}</version>-->
+      <!--</plugin>-->
+      <!--<plugin>-->
+        <!--<groupId>org.codehaus.mojo</groupId>-->
+        <!--<artifactId>cobertura-maven-plugin</artifactId>-->
+        <!--<version>${version.plugin.mojo.cobertura}</version>-->
+      <!--</plugin>-->
+    <!--</plugins>-->
+  <!--</reporting>-->
 
 </project>

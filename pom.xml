@@ -105,6 +105,24 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.6.4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>1.6.4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>10.0.1</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream</artifactId>
         <version>1.4.6-SONATYPE-SNAPSHOT</version>
@@ -696,7 +714,7 @@
     <version.javaassist>3.12.1.GA</version.javaassist>
     <version.jmock>1.0.1</version.jmock>
     <version.joda-time>1.6</version.joda-time>
-    <version.junit>3.8.1</version.junit>
+    <version.junit>4.11</version.junit>
     <version.net.sf.kxml.kxml2>2.3.0</version.net.sf.kxml.kxml2>
     <version.org.codehaus.jettison>1.2</version.org.codehaus.jettison>
     <version.org.codehaus.woodstox.asl>3.2.7</version.org.codehaus.woodstox.asl>
