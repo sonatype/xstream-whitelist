@@ -12,9 +12,9 @@
      -->
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.thoughtworks.xstream</groupId>
+    <groupId>org.sonatype.nexus.xstream</groupId>
     <artifactId>xstream-parent</artifactId>
-    <version>1.4.6</version>
+    <version>1.4.6-SONATYPE-SNAPSHOT</version>
   </parent>
   <artifactId>xstream-distribution</artifactId>
   <packaging>pom</packaging>
@@ -25,17 +25,17 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
+      <groupId>org.sonatype.nexus.xstream</groupId>
       <artifactId>xstream</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
+      <groupId>org.sonatype.nexus.xstream</groupId>
       <artifactId>xstream-hibernate</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
+      <groupId>org.sonatype.nexus.xstream</groupId>
       <artifactId>xstream-benchmark</artifactId>
       <scope>runtime</scope>
     </dependency>
@@ -103,17 +103,17 @@
       </build>
       <dependencies>
         <dependency>
-          <groupId>com.thoughtworks.xstream</groupId>
+          <groupId>org.sonatype.nexus.xstream</groupId>
           <artifactId>xstream</artifactId>
           <classifier>javadoc</classifier>
         </dependency>
         <dependency>
-          <groupId>com.thoughtworks.xstream</groupId>
+          <groupId>org.sonatype.nexus.xstream</groupId>
           <artifactId>xstream-hibernate</artifactId>
           <classifier>javadoc</classifier>
         </dependency>
         <dependency>
-          <groupId>com.thoughtworks.xstream</groupId>
+          <groupId>org.sonatype.nexus.xstream</groupId>
           <artifactId>xstream-benchmark</artifactId>
           <classifier>javadoc</classifier>
         </dependency>

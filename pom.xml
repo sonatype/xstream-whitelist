@@ -17,10 +17,10 @@
     <version>3</version><!-- 4 required Java 5 -->
     <relativePath />
   </parent>
-  <groupId>com.thoughtworks.xstream</groupId>
+  <groupId>org.sonatype.nexus.xstream</groupId>
   <artifactId>xstream-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.6</version>
+  <version>1.4.6-SONATYPE-SNAPSHOT</version>
   <name>XStream Parent</name>
   <description>
     XStream is a serialization library from Java objects to XML and back.
@@ -105,46 +105,46 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
+        <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.6-SONATYPE-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
+        <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.6-SONATYPE-SNAPSHOT</version>
         <classifier>tests</classifier>
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
+        <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.6-SONATYPE-SNAPSHOT</version>
         <classifier>javadoc</classifier>
         <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
+        <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-hibernate</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.6-SONATYPE-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
+        <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-hibernate</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.6-SONATYPE-SNAPSHOT</version>
         <classifier>javadoc</classifier>
         <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
+        <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-benchmark</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.6-SONATYPE-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
+        <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-benchmark</artifactId>
-        <version>1.4.6</version>
+        <version>1.4.6-SONATYPE-SNAPSHOT</version>
         <classifier>javadoc</classifier>
         <scope>provided</scope>
       </dependency>
