@@ -94,6 +94,7 @@ import com.thoughtworks.xstream.converters.extended.SqlDateConverter;
 import com.thoughtworks.xstream.converters.extended.SqlTimeConverter;
 import com.thoughtworks.xstream.converters.extended.SqlTimestampConverter;
 import com.thoughtworks.xstream.converters.extended.TextAttributeConverter;
+import com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter;
 import com.thoughtworks.xstream.converters.reflection.ExternalizableConverter;
 import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
 import com.thoughtworks.xstream.converters.reflection.ReflectionProvider;
@@ -115,6 +116,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.StatefulWriter;
 import com.thoughtworks.xstream.io.xml.XppDriver;
 import com.thoughtworks.xstream.mapper.AnnotationConfiguration;
+import com.thoughtworks.xstream.mapper.AnnotationMapper;
 import com.thoughtworks.xstream.mapper.ArrayMapper;
 import com.thoughtworks.xstream.mapper.AttributeAliasingMapper;
 import com.thoughtworks.xstream.mapper.AttributeMapper;
@@ -122,7 +124,7 @@ import com.thoughtworks.xstream.mapper.CachingMapper;
 import com.thoughtworks.xstream.mapper.ClassAliasingMapper;
 import com.thoughtworks.xstream.mapper.DefaultImplementationsMapper;
 import com.thoughtworks.xstream.mapper.DefaultMapper;
-import com.thoughtworks.xstream.mapper.DynamicProxyMapper;
+import com.thoughtworks.xstream.mapper.EnumMapper;
 import com.thoughtworks.xstream.mapper.FieldAliasingMapper;
 import com.thoughtworks.xstream.mapper.ImmutableTypesMapper;
 import com.thoughtworks.xstream.mapper.ImplicitCollectionMapper;
@@ -133,6 +135,9 @@ import com.thoughtworks.xstream.mapper.OuterClassMapper;
 import com.thoughtworks.xstream.mapper.PackageAliasingMapper;
 import com.thoughtworks.xstream.mapper.SystemAttributeAliasingMapper;
 import com.thoughtworks.xstream.mapper.XStream11XmlFriendlyMapper;
+import com.thoughtworks.xstream.whitelist.TypeWhitelist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -284,6 +289,8 @@ import com.thoughtworks.xstream.mapper.XStream11XmlFriendlyMapper;
  */
 public class XStream {
 
+    private static Logger log = LoggerFactory.getLogger(XStream.class);
+
     // CAUTION: The sequence of the fields is intentional for an optimal XML output of a
     // self-serialization!
     private ReflectionProvider reflectionProvider;
@@ -320,6 +327,8 @@ public class XStream {
 
     private static final String ANNOTATION_MAPPER_TYPE = "com.thoughtworks.xstream.mapper.AnnotationMapper";
     private static final Pattern IGNORE_ALL = Pattern.compile(".*");
+
+    private final TypeWhitelist typeWhitelist;
 
     /**
      * Constructs a default XStream.
@@ -535,6 +544,9 @@ public class XStream {
         ReflectionProvider reflectionProvider, HierarchicalStreamDriver driver,
         ClassLoaderReference classLoaderReference, Mapper mapper, ConverterLookup converterLookup,
         ConverterRegistry converterRegistry) {
+
+        this.typeWhitelist = new TypeWhitelist();
+
         if (reflectionProvider == null) {
             reflectionProvider = JVM.newReflectionProvider();
         }
@@ -553,52 +565,175 @@ public class XStream {
         setMode(XPATH_RELATIVE_REFERENCES);
     }
 
+    //private Mapper buildMapper() {
+    //    Mapper mapper = new DefaultMapper(classLoaderReference);
+    //    if (useXStream11XmlFriendlyMapper()) {
+    //        mapper = new XStream11XmlFriendlyMapper(mapper);
+    //    }
+    //    mapper = new DynamicProxyMapper(mapper);
+    //    mapper = new PackageAliasingMapper(mapper);
+    //    mapper = new ClassAliasingMapper(mapper);
+    //    mapper = new FieldAliasingMapper(mapper);
+    //    mapper = new AttributeAliasingMapper(mapper);
+    //    mapper = new SystemAttributeAliasingMapper(mapper);
+    //    mapper = new ImplicitCollectionMapper(mapper);
+    //    mapper = new OuterClassMapper(mapper);
+    //    mapper = new ArrayMapper(mapper);
+    //    mapper = new DefaultImplementationsMapper(mapper);
+    //    mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
+    //    if (JVM.is15()) {
+    //        mapper = buildMapperDynamically(
+    //            "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
+    //            new Object[]{mapper});
+    //    }
+    //    mapper = new LocalConversionMapper(mapper);
+    //    mapper = new ImmutableTypesMapper(mapper);
+    //    if (JVM.is15()) {
+    //        mapper = buildMapperDynamically(ANNOTATION_MAPPER_TYPE, new Class[]{
+    //            Mapper.class, ConverterRegistry.class, ConverterLookup.class,
+    //            ClassLoaderReference.class, ReflectionProvider.class}, new Object[]{
+    //            mapper, converterLookup, converterLookup, classLoaderReference,
+    //            reflectionProvider});
+    //    }
+    //    mapper = wrapMapper((MapperWrapper)mapper);
+    //    mapper = new CachingMapper(mapper);
+    //    return mapper;
+    //}
+
+    /**
+     * Create the mapper to be used, generally follows the defaults,
+     * omitting dangerous mappers and adding adapters to white-list types when configured.
+     */
     private Mapper buildMapper() {
-        Mapper mapper = new DefaultMapper(classLoaderReference);
-        if (useXStream11XmlFriendlyMapper()) {
-            mapper = new XStream11XmlFriendlyMapper(mapper);
+      Mapper mapper = new DefaultMapper(classLoaderReference);
+
+      if (useXStream11XmlFriendlyMapper()) {
+          mapper = new XStream11XmlFriendlyMapper(mapper);
+      }
+
+      // disable dynamic-proxy mapper
+      //mapper = new DynamicProxyMapper(mapper);
+
+      // white-list any aliased packages
+      mapper = new PackageAliasingMapper(mapper)
+      {
+        @Override
+        public void addPackageAlias(final String name, final String pkg) {
+          super.addPackageAlias(name, pkg);
+          typeWhitelist.allowPackage(pkg);
         }
-        mapper = new DynamicProxyMapper(mapper);
-        mapper = new PackageAliasingMapper(mapper);
-        mapper = new ClassAliasingMapper(mapper);
-        mapper = new FieldAliasingMapper(mapper);
-        mapper = new AttributeAliasingMapper(mapper);
-        mapper = new SystemAttributeAliasingMapper(mapper);
-        mapper = new ImplicitCollectionMapper(mapper);
-        mapper = new OuterClassMapper(mapper);
-        mapper = new ArrayMapper(mapper);
-        mapper = new DefaultImplementationsMapper(mapper);
-        mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
-        if (JVM.is15()) {
-            mapper = buildMapperDynamically(
-                "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
-                new Object[]{mapper});
+      };
+
+      // white-list any aliased types
+      mapper = new ClassAliasingMapper(mapper)
+      {
+        @Override
+        public void addClassAlias(final String name, final Class type) {
+          super.addClassAlias(name, type);
+          typeWhitelist.allowType(type);
         }
-        mapper = new LocalConversionMapper(mapper);
-        mapper = new ImmutableTypesMapper(mapper);
-        if (JVM.is15()) {
-            mapper = buildMapperDynamically(ANNOTATION_MAPPER_TYPE, new Class[]{
-                Mapper.class, ConverterRegistry.class, ConverterLookup.class,
-                ClassLoaderReference.class, ReflectionProvider.class}, new Object[]{
-                mapper, converterLookup, converterLookup, classLoaderReference,
-                reflectionProvider});
+
+        @Override
+        public void addTypeAlias(final String name, final Class type) {
+          super.addTypeAlias(name, type);
+          typeWhitelist.allowType(type);
         }
-        mapper = wrapMapper((MapperWrapper)mapper);
-        mapper = new CachingMapper(mapper);
-        return mapper;
+      };
+
+      // white-list container type for aliased fields
+      mapper = new FieldAliasingMapper(mapper)
+      {
+        @Override
+        public void addFieldAlias(final String alias, final Class type, final String fieldName) {
+          super.addFieldAlias(alias, type, fieldName);
+          typeWhitelist.allowType(type);
+        }
+      };
+
+      mapper = new AttributeAliasingMapper(mapper);
+      mapper = new SystemAttributeAliasingMapper(mapper);
+
+      // white-list implicit collection defined-in and item-types
+      mapper = new ImplicitCollectionMapper(mapper)
+      {
+        @Override
+        public void add(final Class definedIn,
+                        final String fieldName,
+                        final String itemFieldName,
+                        final Class itemType,
+                        final String keyFieldName)
+        {
+          super.add(definedIn, fieldName, itemFieldName, itemType, keyFieldName);
+          typeWhitelist.allowType(definedIn, itemType);
+        }
+      };
+
+      mapper = new OuterClassMapper(mapper);
+      mapper = new ArrayMapper(mapper);
+
+      // white-list default implementations
+      mapper = new DefaultImplementationsMapper(mapper)
+      {
+        @Override
+        public void addDefaultImplementation(final Class defaultImplementation, final Class ofType) {
+          super.addDefaultImplementation(defaultImplementation, ofType);
+          if (defaultImplementation != null) {
+            typeWhitelist.allowType(defaultImplementation);
+          }
+          if (ofType != null) {
+            typeWhitelist.allowType(ofType);
+          }
+        }
+      };
+      mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
+      mapper = new EnumMapper(mapper);
+
+      // white-list defined-in classes for local converters
+      mapper = new LocalConversionMapper(mapper)
+      {
+        @Override
+        public void registerLocalConverter(final Class definedIn, final String fieldName, final Converter converter) {
+          super.registerLocalConverter(definedIn, fieldName, converter);
+          typeWhitelist.allowType(definedIn);
+        }
+      };
+
+      // white-list immutable types
+      mapper = new ImmutableTypesMapper(mapper)
+      {
+        @Override
+        public void addImmutableType(final Class type) {
+          super.addImmutableType(type);
+          typeWhitelist.allowType(type);
+        }
+      };
+
+      // white-list types with annotations
+      mapper = new AnnotationMapper(mapper, converterRegistry, converterLookup, classLoaderReference, reflectionProvider)
+      {
+        @Override
+        public void processAnnotations(final Class[] initialTypes) {
+          super.processAnnotations(initialTypes);
+          typeWhitelist.allowType(initialTypes);
+        }
+      };
+
+      mapper = new CachingMapper(mapper);
+
+      return mapper;
     }
 
-    private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
-        Object[] constructorParamValues) {
-        try {
-            Class type = Class.forName(className, false, classLoaderReference.getReference());
-            Constructor constructor = type.getConstructor(constructorParamTypes);
-            return (Mapper)constructor.newInstance(constructorParamValues);
-        } catch (Exception e) {
-            throw new com.thoughtworks.xstream.InitializationException(
-                "Could not instantiate mapper : " + className, e);
-        }
-    }
+    //private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
+    //    Object[] constructorParamValues) {
+    //    try {
+    //        Class type = Class.forName(className, false, classLoaderReference.getReference());
+    //        Constructor constructor = type.getConstructor(constructorParamTypes);
+    //        return (Mapper)constructor.newInstance(constructorParamValues);
+    //    } catch (Exception e) {
+    //        throw new com.thoughtworks.xstream.InitializationException(
+    //            "Could not instantiate mapper : " + className, e);
+    //    }
+    //}
 
     protected MapperWrapper wrapMapper(MapperWrapper next) {
         return next;
@@ -742,9 +877,37 @@ public class XStream {
         addDefaultImplementation(GregorianCalendar.class, Calendar.class);
     }
 
+    /**
+     * Limited {@link ReflectionConverter} to restrict what types can be converted via reflection.
+     */
+    private class WhitelistReflectionConverter
+        extends AbstractReflectionConverter
+    {
+      public WhitelistReflectionConverter(final Mapper mapper,
+                                          final ReflectionProvider reflectionProvider)
+      {
+        super(mapper, reflectionProvider);
+      }
+
+      public boolean canConvert(final Class type) {
+        log.trace("Checking conversion of: {}", type);
+
+        if (typeWhitelist.isAllowed(type)) {
+          log.trace("Conversion allowed");
+          return true;
+        }
+
+        log.warn("Denying conversion of: {}", type);
+        return false;
+      }
+    }
+
     protected void setupConverters() {
-        registerConverter(
-            new ReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
+        //registerConverter(
+        //    new ReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
+
+        // NOTE: This may be moot with class-loader white-listing
+        registerConverter(new WhitelistReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
 
         registerConverter(
             new SerializableConverter(mapper, reflectionProvider, classLoaderReference), PRIORITY_LOW);
