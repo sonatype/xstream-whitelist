@@ -155,17 +155,19 @@ public class TypeWhitelist
     checkNotNull(names);
     ensureNotFrozen();
     for (String name : names) {
-      checkNotNull(name);
-      allowedTypes.add(name);
-      log.trace("Allow type: {}", name);
+      if (name != null) {
+        allowedTypes.add(name);
+        log.trace("Allow type: {}", name);
+      }
     }
   }
 
   public void allowType(final Class... types) {
     checkNotNull(types);
     for (Class type : types) {
-      checkNotNull(type);
-      allowType(type.getName());
+      if (type != null) {
+        allowType(type.getName());
+      }
     }
   }
 
@@ -173,17 +175,19 @@ public class TypeWhitelist
     checkNotNull(names);
     ensureNotFrozen();
     for (String name : names) {
-      checkNotNull(name);
-      allowedPackages.add(name);
-      log.trace("Allow package: {}", name);
+      if (name != null) {
+        allowedPackages.add(name);
+        log.trace("Allow package: {}", name);
+      }
     }
   }
 
   public void allowPackage(final Package... packages) {
     checkNotNull(packages);
     for (Package pkg : packages) {
-      checkNotNull(pkg);
-      allowPackage(pkg.getName());
+      if (pkg != null) {
+        allowPackage(pkg.getName());
+      }
     }
   }
 
@@ -191,17 +195,19 @@ public class TypeWhitelist
     checkNotNull(patterns);
     ensureNotFrozen();
     for (Pattern pattern : patterns) {
-      checkNotNull(pattern);
-      allowedPatterns.add(pattern);
-      log.trace("Allow pattern: {}", pattern);
+      if (pattern != null) {
+        allowedPatterns.add(pattern);
+        log.trace("Allow pattern: {}", pattern);
+      }
     }
   }
 
   public void allowPattern(final String... patterns) {
     checkNotNull(patterns);
     for (String pattern : patterns) {
-      checkNotNull(pattern);
-      allowPattern(compilePattern(pattern));
+      if (pattern != null) {
+        allowPattern(compilePattern(pattern));
+      }
     }
   }
 
