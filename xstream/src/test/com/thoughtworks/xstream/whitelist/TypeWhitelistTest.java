@@ -29,6 +29,7 @@ public class TypeWhitelistTest
   public void tearDown() throws Exception {
     TypeWhitelist.allowedTypesProperty.remove();
     TypeWhitelist.allowedPackagesProperty.remove();
+    TypeWhitelist.allowAllProperty.remove();
   }
 
   @Test

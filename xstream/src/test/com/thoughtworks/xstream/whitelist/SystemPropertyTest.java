@@ -87,6 +87,13 @@ public class SystemPropertyTest
   }
 
   @Test
+  public void get_asBoolean_withDefault() {
+    assertThat(underTest.get(Boolean.class, false), is(false));
+    underTest.set("true");
+    assertThat(underTest.get(Boolean.class, false), is(true));
+  }
+
+  @Test
   public void asList_missingProperty() {
     List<String> result = underTest.asList();
     assertThat(result, notNullValue());
