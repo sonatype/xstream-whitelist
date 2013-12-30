@@ -105,18 +105,6 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>1.6.4</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-simple</artifactId>
-        <version>1.6.4</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>10.0.1</version>
@@ -562,6 +550,7 @@
             <forkMode>once</forkMode>
             <printSummary>true</printSummary>
             <useFile>false</useFile>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <includes>
                 <include>**/*Test.java</include>
                 <include>**/*TestSuite.java</include>
@@ -703,7 +692,7 @@
     <version.plugin.maven.resources>2.2</version.plugin.maven.resources>
     <version.plugin.maven.site>2.0-beta-6</version.plugin.maven.site>
     <version.plugin.maven.source>2.1.2</version.plugin.maven.source>
-    <version.plugin.maven.surefire>2.4.3</version.plugin.maven.surefire>
+    <version.plugin.maven.surefire>2.16</version.plugin.maven.surefire>
     <version.plugin.mojo.build-helper>1.5</version.plugin.mojo.build-helper>
     <version.plugin.mojo.cobertura>2.0</version.plugin.mojo.cobertura>
     <version.plugin.mojo.jxr>2.0-beta-1</version.plugin.mojo.jxr>
