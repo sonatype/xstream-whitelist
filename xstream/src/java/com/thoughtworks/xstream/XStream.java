@@ -302,6 +302,7 @@ public class XStream {
     // self-serialization!
     private ReflectionProvider reflectionProvider;
     private HierarchicalStreamDriver hierarchicalStreamDriver;
+    private ClassLoaderReference originalClassLoaderReference;
     private ClassLoaderReference classLoaderReference;
     private MarshallingStrategy marshallingStrategy;
     private ConverterLookup converterLookup;
@@ -568,6 +569,8 @@ public class XStream {
         this.reflectionProvider = reflectionProvider;
         this.hierarchicalStreamDriver = driver;
 
+        // keep non-white-listed CL for XStream construction (dynamic mapper creation)
+        this.originalClassLoaderReference = classLoaderReference;
         // wrap class-loader with white-list aware class-loader
         this.classLoaderReference = new ClassLoaderReference(
             wrapClassloader(classLoaderReference.getReference()));
@@ -849,7 +852,7 @@ public class XStream {
           typeWhitelist.allowType(constructorParamTypes);
         }
         try {
-            Class type = Class.forName(className, false, classLoaderReference.getReference());
+            Class type = Class.forName(className, false, originalClassLoaderReference.getReference());
             Constructor constructor = type.getConstructor(constructorParamTypes);
             return (Mapper)constructor.newInstance(constructorParamValues);
         } catch (Exception e) {
@@ -1163,7 +1166,7 @@ public class XStream {
           typeWhitelist.allowType(constructorParamTypes);
         }
         try {
-            Class type = Class.forName(className, false, classLoaderReference.getReference());
+            Class type = Class.forName(className, false, originalClassLoaderReference.getReference());
             Constructor constructor = type.getConstructor(constructorParamTypes);
             Object instance = constructor.newInstance(constructorParamValues);
             if (instance instanceof Converter) {
