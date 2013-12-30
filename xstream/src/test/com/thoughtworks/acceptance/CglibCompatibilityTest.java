@@ -33,13 +33,11 @@ import net.sf.cglib.proxy.InvocationHandler;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import net.sf.cglib.proxy.NoOp;
-import org.junit.Ignore;
 
 
 /**
  * @author J&ouml;rg Schaible
  */
-@Ignore
 public class CglibCompatibilityTest extends AbstractAcceptanceTest {
 
     protected XStream createXStream() {

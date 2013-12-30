@@ -18,8 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Helper to access System properties.
  */
-@VisibleForTesting
-class SystemProperty
+public class SystemProperty
 {
   private static final Logger log = LoggerFactory.getLogger(SystemProperty.class);
 

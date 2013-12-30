@@ -16,13 +16,22 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.thoughtworks.acceptance.objects.Category;
+import com.thoughtworks.acceptance.objects.Product;
 import com.thoughtworks.acceptance.objects.Software;
 import com.thoughtworks.acceptance.someobjects.WithList;
 import com.thoughtworks.acceptance.someobjects.X;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.SingleValueConverter;
+import com.thoughtworks.xstream.converters.extended.JavaClassConverter;
+import com.thoughtworks.xstream.converters.extended.JavaFieldConverter;
+import com.thoughtworks.xstream.converters.extended.JavaMethodConverter;
+import com.thoughtworks.xstream.core.util.Primitives;
 import com.thoughtworks.xstream.io.xml.XmlFriendlyNameCoder;
 import com.thoughtworks.xstream.io.xml.XppDriver;
+import com.thoughtworks.xstream.mapper.ArrayMapper;
 import com.thoughtworks.xstream.mapper.CannotResolveClassException;
+import com.thoughtworks.xstream.mapper.Mapper;
+import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 /**
  * @author Paul Hammant
@@ -372,60 +381,59 @@ public class AliasTest extends AbstractAcceptanceTest {
     
     private void takingDoubles(Double d1, double d2) {}
 
-    // NOTE: @Ignore not functional here for some reason, comment out to disable
-    //public void testCanCreateAliasingJavaTypeConverter() throws NoSuchFieldException, NoSuchMethodException {
-    //    Mapper mapper = new MapperWrapper(xstream.getMapper().lookupMapperOfType(ArrayMapper.class)) {
-    //        public Class realClass(String elementName) {
-    //            Class primitiveType = Primitives.primitiveType(elementName);
-    //            return primitiveType != null ? primitiveType : super.realClass(elementName);
-    //        }
-    //    };
-    //    SingleValueConverter javaClassConverter = new JavaClassConverter(mapper) {};
-    //    xstream.registerConverter(javaClassConverter);
-    //    xstream.registerConverter(new JavaMethodConverter(javaClassConverter){});
-    //    xstream.registerConverter(new JavaFieldConverter(javaClassConverter, mapper){});
-    //    xstream.alias("A", TypeA.class);
-    //    xstream.alias("Prod", Product.class);
-    //    xstream.aliasField("a", TypeA.class, "attrA");
-    //    xstream.alias("Test", getClass());
-    //
-    //    List list = new ArrayList();
-    //    list.add(TypeA.class);
-    //    list.add(int[][][].class);
-    //    list.add(Integer[][][].class);
-    //    list.add(TypeA.class.getDeclaredField("attrA"));
-    //    list.add(Product.class.getConstructor(new Class[]{String.class, String.class, double.class}));
-    //    list.add(getClass().getDeclaredMethod("takingDoubles", new Class[]{Double.class, double.class}));
-    //    list.add(ArrayList.class);
-    //
-    //    String xml = "" //
-    //        + "<list>\n"
-    //        + "  <java-class>A</java-class>\n"
-    //        + "  <java-class>int-array-array-array</java-class>\n"
-    //        + "  <java-class>java.lang.Integer-array-array-array</java-class>\n"
-    //        + "  <field>\n"
-    //        + "    <name>a</name>\n"
-    //        + "    <clazz>A</clazz>\n"
-    //        + "  </field>\n"
-    //        + "  <constructor>\n"
-    //        + "    <class>Prod</class>\n"
-    //        + "    <parameter-types>\n"
-    //        + "      <class>string</class>\n"
-    //        + "      <class>string</class>\n"
-    //        + "      <class>double</class>\n"
-    //        + "    </parameter-types>\n"
-    //        + "  </constructor>\n"
-    //        + "  <method>\n"
-    //        + "    <class>Test</class>\n"
-    //        + "    <name>takingDoubles</name>\n"
-    //        + "    <parameter-types>\n"
-    //        + "      <class>java.lang.Double</class>\n"
-    //        + "      <class>double</class>\n"
-    //        + "    </parameter-types>\n"
-    //        + "  </method>\n"
-    //        + "  <java-class>java.util.ArrayList</java-class>\n"
-    //        + "</list>";
-    //
-    //    assertBothWays(list, xml);
-    //}
+    public void testCanCreateAliasingJavaTypeConverter() throws NoSuchFieldException, NoSuchMethodException {
+        Mapper mapper = new MapperWrapper(xstream.getMapper().lookupMapperOfType(ArrayMapper.class)) {
+            public Class realClass(String elementName) {
+                Class primitiveType = Primitives.primitiveType(elementName);
+                return primitiveType != null ? primitiveType : super.realClass(elementName);
+            }
+        };
+        SingleValueConverter javaClassConverter = new JavaClassConverter(mapper) {};
+        xstream.registerConverter(javaClassConverter);
+        xstream.registerConverter(new JavaMethodConverter(javaClassConverter){});
+        xstream.registerConverter(new JavaFieldConverter(javaClassConverter, mapper){});
+        xstream.alias("A", TypeA.class);
+        xstream.alias("Prod", Product.class);
+        xstream.aliasField("a", TypeA.class, "attrA");
+        xstream.alias("Test", getClass());
+
+        List list = new ArrayList();
+        list.add(TypeA.class);
+        list.add(int[][][].class);
+        list.add(Integer[][][].class);
+        list.add(TypeA.class.getDeclaredField("attrA"));
+        list.add(Product.class.getConstructor(new Class[]{String.class, String.class, double.class}));
+        list.add(getClass().getDeclaredMethod("takingDoubles", new Class[]{Double.class, double.class}));
+        list.add(ArrayList.class);
+
+        String xml = "" //
+            + "<list>\n"
+            + "  <java-class>A</java-class>\n"
+            + "  <java-class>int-array-array-array</java-class>\n"
+            + "  <java-class>java.lang.Integer-array-array-array</java-class>\n"
+            + "  <field>\n"
+            + "    <name>a</name>\n"
+            + "    <clazz>A</clazz>\n"
+            + "  </field>\n"
+            + "  <constructor>\n"
+            + "    <class>Prod</class>\n"
+            + "    <parameter-types>\n"
+            + "      <class>string</class>\n"
+            + "      <class>string</class>\n"
+            + "      <class>double</class>\n"
+            + "    </parameter-types>\n"
+            + "  </constructor>\n"
+            + "  <method>\n"
+            + "    <class>Test</class>\n"
+            + "    <name>takingDoubles</name>\n"
+            + "    <parameter-types>\n"
+            + "      <class>java.lang.Double</class>\n"
+            + "      <class>double</class>\n"
+            + "    </parameter-types>\n"
+            + "  </method>\n"
+            + "  <java-class>java.util.ArrayList</java-class>\n"
+            + "</list>";
+
+        assertBothWays(list, xml);
+    }
 }

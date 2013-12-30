@@ -25,6 +25,8 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -85,10 +87,14 @@ import com.thoughtworks.xstream.converters.collections.SingletonMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeSetConverter;
 import com.thoughtworks.xstream.converters.extended.ColorConverter;
+import com.thoughtworks.xstream.converters.extended.DynamicProxyConverter;
 import com.thoughtworks.xstream.converters.extended.EncodedByteArrayConverter;
 import com.thoughtworks.xstream.converters.extended.FileConverter;
 import com.thoughtworks.xstream.converters.extended.FontConverter;
 import com.thoughtworks.xstream.converters.extended.GregorianCalendarConverter;
+import com.thoughtworks.xstream.converters.extended.JavaClassConverter;
+import com.thoughtworks.xstream.converters.extended.JavaFieldConverter;
+import com.thoughtworks.xstream.converters.extended.JavaMethodConverter;
 import com.thoughtworks.xstream.converters.extended.LocaleConverter;
 import com.thoughtworks.xstream.converters.extended.LookAndFeelConverter;
 import com.thoughtworks.xstream.converters.extended.SqlDateConverter;
@@ -117,7 +123,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.StatefulWriter;
 import com.thoughtworks.xstream.io.xml.XppDriver;
 import com.thoughtworks.xstream.mapper.AnnotationConfiguration;
-import com.thoughtworks.xstream.mapper.AnnotationMapper;
 import com.thoughtworks.xstream.mapper.ArrayMapper;
 import com.thoughtworks.xstream.mapper.AttributeAliasingMapper;
 import com.thoughtworks.xstream.mapper.AttributeMapper;
@@ -125,7 +130,7 @@ import com.thoughtworks.xstream.mapper.CachingMapper;
 import com.thoughtworks.xstream.mapper.ClassAliasingMapper;
 import com.thoughtworks.xstream.mapper.DefaultImplementationsMapper;
 import com.thoughtworks.xstream.mapper.DefaultMapper;
-import com.thoughtworks.xstream.mapper.EnumMapper;
+import com.thoughtworks.xstream.mapper.DynamicProxyMapper;
 import com.thoughtworks.xstream.mapper.FieldAliasingMapper;
 import com.thoughtworks.xstream.mapper.ImmutableTypesMapper;
 import com.thoughtworks.xstream.mapper.ImplicitCollectionMapper;
@@ -136,6 +141,7 @@ import com.thoughtworks.xstream.mapper.OuterClassMapper;
 import com.thoughtworks.xstream.mapper.PackageAliasingMapper;
 import com.thoughtworks.xstream.mapper.SystemAttributeAliasingMapper;
 import com.thoughtworks.xstream.mapper.XStream11XmlFriendlyMapper;
+import com.thoughtworks.xstream.whitelist.SystemProperty;
 import com.thoughtworks.xstream.whitelist.TypeWhitelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -546,9 +552,15 @@ public class XStream {
         ClassLoaderReference classLoaderReference, Mapper mapper, ConverterLookup converterLookup,
         ConverterRegistry converterRegistry) {
 
-        this.typeWhitelist = new TypeWhitelist();
-
-        setupWhitelist();
+        // optional enable white-list
+        if (isWhitelistEnabled()) {
+          this.typeWhitelist = new TypeWhitelist();
+          log.info("White-list enabled");
+          setupWhitelist();
+        }
+        else {
+          typeWhitelist = null;
+        }
 
         if (reflectionProvider == null) {
             reflectionProvider = JVM.newReflectionProvider();
@@ -572,191 +584,227 @@ public class XStream {
         setMode(XPATH_RELATIVE_REFERENCES);
     }
 
-  private void setupWhitelist() {
-    // if not created from restlet bridge, then allow all
-    if (!isRestletBridge()) {
-      typeWhitelist.setAllowAll(true);
-      return;
-    }
+    private static final SystemProperty whitelistForce = new SystemProperty(XStream.class, "whitelistForce");
 
-    // some additional JRE types to white-list
-    typeWhitelist.allowType("java.util.Arrays$ArrayList");
-  }
-
-  private boolean isRestletBridge() {
-    // TODO: Inspect call-stack and determine if created from restlet-bridge
-    return false;
-  }
-
-  //private Mapper buildMapper() {
-    //    Mapper mapper = new DefaultMapper(classLoaderReference);
-    //    if (useXStream11XmlFriendlyMapper()) {
-    //        mapper = new XStream11XmlFriendlyMapper(mapper);
-    //    }
-    //    mapper = new DynamicProxyMapper(mapper);
-    //    mapper = new PackageAliasingMapper(mapper);
-    //    mapper = new ClassAliasingMapper(mapper);
-    //    mapper = new FieldAliasingMapper(mapper);
-    //    mapper = new AttributeAliasingMapper(mapper);
-    //    mapper = new SystemAttributeAliasingMapper(mapper);
-    //    mapper = new ImplicitCollectionMapper(mapper);
-    //    mapper = new OuterClassMapper(mapper);
-    //    mapper = new ArrayMapper(mapper);
-    //    mapper = new DefaultImplementationsMapper(mapper);
-    //    mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
-    //    if (JVM.is15()) {
-    //        mapper = buildMapperDynamically(
-    //            "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
-    //            new Object[]{mapper});
-    //    }
-    //    mapper = new LocalConversionMapper(mapper);
-    //    mapper = new ImmutableTypesMapper(mapper);
-    //    if (JVM.is15()) {
-    //        mapper = buildMapperDynamically(ANNOTATION_MAPPER_TYPE, new Class[]{
-    //            Mapper.class, ConverterRegistry.class, ConverterLookup.class,
-    //            ClassLoaderReference.class, ReflectionProvider.class}, new Object[]{
-    //            mapper, converterLookup, converterLookup, classLoaderReference,
-    //            reflectionProvider});
-    //    }
-    //    mapper = wrapMapper((MapperWrapper)mapper);
-    //    mapper = new CachingMapper(mapper);
-    //    return mapper;
-    //}
-
-    /**
-     * Create the mapper to be used, generally follows the defaults,
-     * omitting dangerous mappers and adding adapters to white-list types when configured.
-     */
-    private Mapper buildMapper() {
-      Mapper mapper = new DefaultMapper(classLoaderReference);
-
-      if (useXStream11XmlFriendlyMapper()) {
-          mapper = new XStream11XmlFriendlyMapper(mapper);
+    private boolean isWhitelistEnabled() {
+      if (whitelistForce.get(Boolean.class, false)) {
+        log.warn("White-list forced");
+        return true;
       }
 
-      // disable dynamic-proxy mapper
-      //mapper = new DynamicProxyMapper(mapper);
-
-      // white-list any aliased packages
-      mapper = new PackageAliasingMapper(mapper)
-      {
-        @Override
-        public void addPackageAlias(final String name, final String pkg) {
-          super.addPackageAlias(name, pkg);
-          typeWhitelist.allowPackage(pkg);
+      for (StackTraceElement element : new Throwable().getStackTrace()) {
+        if ("org.sonatype.plexus.rest.PlexusRestletApplicationBridge".equals(element.getClassName())) {
+          return true;
         }
-      };
-
-      // white-list any aliased types
-      mapper = new ClassAliasingMapper(mapper)
-      {
-        @Override
-        public void addClassAlias(final String name, final Class type) {
-          super.addClassAlias(name, type);
-          typeWhitelist.allowType(type);
-        }
-
-        @Override
-        public void addTypeAlias(final String name, final Class type) {
-          super.addTypeAlias(name, type);
-          typeWhitelist.allowType(type);
-        }
-      };
-
-      // white-list container type for aliased fields
-      mapper = new FieldAliasingMapper(mapper)
-      {
-        @Override
-        public void addFieldAlias(final String alias, final Class type, final String fieldName) {
-          super.addFieldAlias(alias, type, fieldName);
-          typeWhitelist.allowType(type);
-        }
-      };
-
-      mapper = new AttributeAliasingMapper(mapper);
-      mapper = new SystemAttributeAliasingMapper(mapper);
-
-      // white-list implicit collection defined-in and item-types
-      mapper = new ImplicitCollectionMapper(mapper)
-      {
-        @Override
-        public void add(final Class definedIn,
-                        final String fieldName,
-                        final String itemFieldName,
-                        final Class itemType,
-                        final String keyFieldName)
-        {
-          super.add(definedIn, fieldName, itemFieldName, itemType, keyFieldName);
-          typeWhitelist.allowType(definedIn, itemType);
-        }
-      };
-
-      mapper = new OuterClassMapper(mapper);
-      mapper = new ArrayMapper(mapper);
-
-      // white-list default implementations
-      mapper = new DefaultImplementationsMapper(mapper)
-      {
-        @Override
-        public void addDefaultImplementation(final Class defaultImplementation, final Class ofType) {
-          super.addDefaultImplementation(defaultImplementation, ofType);
-          if (defaultImplementation != null) {
-            typeWhitelist.allowType(defaultImplementation);
-          }
-          if (ofType != null) {
-            typeWhitelist.allowType(ofType);
-          }
-        }
-      };
-      mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
-      mapper = new EnumMapper(mapper);
-
-      // white-list defined-in classes for local converters
-      mapper = new LocalConversionMapper(mapper)
-      {
-        @Override
-        public void registerLocalConverter(final Class definedIn, final String fieldName, final Converter converter) {
-          super.registerLocalConverter(definedIn, fieldName, converter);
-          typeWhitelist.allowType(definedIn);
-        }
-      };
-
-      // white-list immutable types
-      mapper = new ImmutableTypesMapper(mapper)
-      {
-        @Override
-        public void addImmutableType(final Class type) {
-          super.addImmutableType(type);
-          typeWhitelist.allowType(type);
-        }
-      };
-
-      // white-list types with annotations
-      mapper = new AnnotationMapper(mapper, converterRegistry, converterLookup, classLoaderReference, reflectionProvider)
-      {
-        @Override
-        public void processAnnotations(final Class[] initialTypes) {
-          super.processAnnotations(initialTypes);
-          typeWhitelist.allowType(initialTypes);
-        }
-      };
-
-      mapper = new CachingMapper(mapper);
-
-      return mapper;
+      }
+      return false;
     }
 
-    //private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
-    //    Object[] constructorParamValues) {
-    //    try {
-    //        Class type = Class.forName(className, false, classLoaderReference.getReference());
-    //        Constructor constructor = type.getConstructor(constructorParamTypes);
-    //        return (Mapper)constructor.newInstance(constructorParamValues);
-    //    } catch (Exception e) {
-    //        throw new com.thoughtworks.xstream.InitializationException(
-    //            "Could not instantiate mapper : " + className, e);
+    private void setupWhitelist() {
+      // white-list jre bits otherwise not detected
+      typeWhitelist.allowType("java.util.Arrays$ArrayList");
+
+      // white-list restlet1x error types
+      typeWhitelist.allowPackage("org.sonatype.plexus.rest.resource.error");
+
+      typeWhitelist.allowPattern(
+          // white-list sonatype core model patterns
+          "^(org|com)\\.sonatype\\..*\\.model\\..*",
+          "^(org|com)\\.sonatype\\..*\\.dto\\..*",
+
+          // white-list types that appear to be entities
+          ".*DTO$",
+          ".*Dto$",
+          ".*Request$",
+          ".*Response$"
+      );
+    }
+
+    private Mapper buildMapper() {
+        Mapper mapper = new DefaultMapper(classLoaderReference);
+        if (useXStream11XmlFriendlyMapper()) {
+            mapper = new XStream11XmlFriendlyMapper(mapper);
+        }
+        mapper = new DynamicProxyMapper(mapper);
+        mapper = new PackageAliasingMapper(mapper);
+        mapper = new ClassAliasingMapper(mapper);
+        mapper = new FieldAliasingMapper(mapper);
+        mapper = new AttributeAliasingMapper(mapper);
+        mapper = new SystemAttributeAliasingMapper(mapper);
+        mapper = new ImplicitCollectionMapper(mapper);
+        mapper = new OuterClassMapper(mapper);
+        mapper = new ArrayMapper(mapper);
+        mapper = new DefaultImplementationsMapper(mapper);
+        mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
+        if (JVM.is15()) {
+            mapper = buildMapperDynamically(
+                "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
+                new Object[]{mapper});
+        }
+        mapper = new LocalConversionMapper(mapper);
+        mapper = new ImmutableTypesMapper(mapper);
+        if (JVM.is15()) {
+            mapper = buildMapperDynamically(ANNOTATION_MAPPER_TYPE, new Class[]{
+                Mapper.class, ConverterRegistry.class, ConverterLookup.class,
+                ClassLoaderReference.class, ReflectionProvider.class}, new Object[]{
+                mapper, converterLookup, converterLookup, classLoaderReference,
+                reflectionProvider});
+        }
+        mapper = wrapMapper((MapperWrapper)mapper);
+        mapper = new CachingMapper(mapper);
+        return mapper;
+    }
+
+    //private Mapper buildMapper() {
+    //  Mapper mapper = new DefaultMapper(classLoaderReference);
+    //
+    //  if (useXStream11XmlFriendlyMapper()) {
+    //      mapper = new XStream11XmlFriendlyMapper(mapper);
+    //  }
+    //
+    //  // disable dynamic-proxy mapper if white-list enabled
+    //  if (typeWhitelist == null) {
+    //    mapper = new DynamicProxyMapper(mapper);
+    //  }
+    //
+    //  // white-list any aliased packages
+    //  mapper = new PackageAliasingMapper(mapper)
+    //  {
+    //    @Override
+    //    public void addPackageAlias(final String name, final String pkg) {
+    //      super.addPackageAlias(name, pkg);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowPackage(pkg);
+    //      }
     //    }
+    //  };
+    //
+    //  // white-list any aliased types
+    //  mapper = new ClassAliasingMapper(mapper)
+    //  {
+    //    @Override
+    //    public void addClassAlias(final String name, final Class type) {
+    //      super.addClassAlias(name, type);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowType(type);
+    //      }
+    //    }
+    //
+    //    @Override
+    //    public void addTypeAlias(final String name, final Class type) {
+    //      super.addTypeAlias(name, type);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowType(type);
+    //      }
+    //    }
+    //  };
+    //
+    //  // white-list container type for aliased fields
+    //  mapper = new FieldAliasingMapper(mapper)
+    //  {
+    //    @Override
+    //    public void addFieldAlias(final String alias, final Class type, final String fieldName) {
+    //      super.addFieldAlias(alias, type, fieldName);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowType(type);
+    //      }
+    //    }
+    //  };
+    //
+    //  mapper = new AttributeAliasingMapper(mapper);
+    //  mapper = new SystemAttributeAliasingMapper(mapper);
+    //
+    //  // white-list implicit collection defined-in and item-types
+    //  mapper = new ImplicitCollectionMapper(mapper)
+    //  {
+    //    @Override
+    //    public void add(final Class definedIn,
+    //                    final String fieldName,
+    //                    final String itemFieldName,
+    //                    final Class itemType,
+    //                    final String keyFieldName)
+    //    {
+    //      super.add(definedIn, fieldName, itemFieldName, itemType, keyFieldName);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowType(definedIn, itemType);
+    //      }
+    //    }
+    //  };
+    //
+    //  mapper = new OuterClassMapper(mapper);
+    //  mapper = new ArrayMapper(mapper);
+    //
+    //  // white-list default implementations
+    //  mapper = new DefaultImplementationsMapper(mapper)
+    //  {
+    //    @Override
+    //    public void addDefaultImplementation(final Class defaultImplementation, final Class ofType) {
+    //      super.addDefaultImplementation(defaultImplementation, ofType);
+    //      if (typeWhitelist != null) {
+    //        if (defaultImplementation != null) {
+    //          typeWhitelist.allowType(defaultImplementation);
+    //        }
+    //        if (ofType != null) {
+    //          typeWhitelist.allowType(ofType);
+    //        }
+    //      }
+    //    }
+    //  };
+    //  mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
+    //  mapper = new EnumMapper(mapper);
+    //
+    //  // white-list defined-in classes for local converters
+    //  mapper = new LocalConversionMapper(mapper)
+    //  {
+    //    @Override
+    //    public void registerLocalConverter(final Class definedIn, final String fieldName, final Converter converter) {
+    //      super.registerLocalConverter(definedIn, fieldName, converter);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowType(definedIn);
+    //      }
+    //    }
+    //  };
+    //
+    //  // white-list immutable types
+    //  mapper = new ImmutableTypesMapper(mapper)
+    //  {
+    //    @Override
+    //    public void addImmutableType(final Class type) {
+    //      super.addImmutableType(type);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowType(type);
+    //      }
+    //    }
+    //  };
+    //
+    //  // white-list types with annotations
+    //  mapper = new AnnotationMapper(mapper, converterRegistry, converterLookup, classLoaderReference, reflectionProvider)
+    //  {
+    //    @Override
+    //    public void processAnnotations(final Class[] initialTypes) {
+    //      super.processAnnotations(initialTypes);
+    //      if (typeWhitelist != null) {
+    //        typeWhitelist.allowType(initialTypes);
+    //      }
+    //    }
+    //  };
+    //
+    //  mapper = new CachingMapper(mapper);
+    //
+    //  return mapper;
     //}
+
+    private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
+        Object[] constructorParamValues) {
+        try {
+            Class type = Class.forName(className, false, classLoaderReference.getReference());
+            Constructor constructor = type.getConstructor(constructorParamTypes);
+            return (Mapper)constructor.newInstance(constructorParamValues);
+        } catch (Exception e) {
+            throw new com.thoughtworks.xstream.InitializationException(
+                "Could not instantiate mapper : " + className, e);
+        }
+    }
 
     protected MapperWrapper wrapMapper(MapperWrapper next) {
         return next;
@@ -813,11 +861,13 @@ public class XStream {
         alias("string-buffer", StringBuffer.class);
         alias("string", String.class);
 
-        // Disable java.lang.reflect aliases
-        //alias("java-class", Class.class);
-        //alias("method", Method.class);
-        //alias("constructor", Constructor.class);
-        //alias("field", Field.class);
+        // Disable java.lang.reflect aliases if whitelist enabled
+        if (typeWhitelist == null) {
+          alias("java-class", Class.class);
+          alias("method", Method.class);
+          alias("constructor", Constructor.class);
+          alias("field", Field.class);
+        }
 
         alias("date", Date.class);
         alias("uri", URI.class);
@@ -913,6 +963,10 @@ public class XStream {
       }
 
       public boolean canConvert(final Class type) {
+        if (typeWhitelist == null) {
+          return true;
+        }
+
         log.trace("Checking conversion of: {}", type);
 
         if (typeWhitelist.isAllowed(type)) {
@@ -926,11 +980,14 @@ public class XStream {
     }
 
     protected void setupConverters() {
-        //registerConverter(
-        //    new ReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
-
-        // NOTE: This may be moot with class-loader white-listing
-        registerConverter(new WhitelistReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
+        // isntall whitelist converter for sanity if whitelist enabled
+        if (typeWhitelist == null) {
+          registerConverter(
+              new ReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
+        }
+        else {
+          registerConverter(new WhitelistReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
+        }
 
         registerConverter(
             new SerializableConverter(mapper, reflectionProvider, classLoaderReference), PRIORITY_LOW);
@@ -973,12 +1030,14 @@ public class XStream {
             registerConverter(new SqlDateConverter(), PRIORITY_NORMAL);
         }
 
-        // disable java.lang.reflect converters
-        //registerConverter(
-        //    new DynamicProxyConverter(mapper, classLoaderReference), PRIORITY_NORMAL);
-        //registerConverter(new JavaClassConverter(classLoaderReference), PRIORITY_NORMAL);
-        //registerConverter(new JavaMethodConverter(classLoaderReference), PRIORITY_NORMAL);
-        //registerConverter(new JavaFieldConverter(classLoaderReference), PRIORITY_NORMAL);
+        // disable java.lang.reflect converters if whitelist enabled
+        if (typeWhitelist == null) {
+          registerConverter(
+              new DynamicProxyConverter(mapper, classLoaderReference), PRIORITY_NORMAL);
+          registerConverter(new JavaClassConverter(classLoaderReference), PRIORITY_NORMAL);
+          registerConverter(new JavaMethodConverter(classLoaderReference), PRIORITY_NORMAL);
+          registerConverter(new JavaFieldConverter(classLoaderReference), PRIORITY_NORMAL);
+        }
 
         if (JVM.isAWTAvailable()) {
             registerConverter(new FontConverter(mapper), PRIORITY_NORMAL);
@@ -2044,6 +2103,10 @@ public class XStream {
     }
 
     private ClassLoader wrapClassloader(final ClassLoader classLoader) {
+      if (typeWhitelist == null) {
+        return classLoader;
+      }
+
       // Wrap classloader so that it will check if class-names are white-listed before allowing them to be loaded
       return new SecureClassLoader(classLoader)
       {

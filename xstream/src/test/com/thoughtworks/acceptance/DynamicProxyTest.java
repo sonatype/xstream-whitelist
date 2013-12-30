@@ -15,9 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.thoughtworks.acceptance.objects.SampleDynamicProxy;
-import org.junit.Ignore;
 
-@Ignore
 public class DynamicProxyTest extends AbstractAcceptanceTest {
     public static class ClassWithProxyMember {
         SampleDynamicProxy.InterfaceOne one;

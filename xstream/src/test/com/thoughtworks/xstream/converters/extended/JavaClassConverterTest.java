@@ -12,9 +12,7 @@
 package com.thoughtworks.xstream.converters.extended;
 
 import com.thoughtworks.acceptance.AbstractAcceptanceTest;
-import org.junit.Ignore;
 
-@Ignore
 public class JavaClassConverterTest extends AbstractAcceptanceTest {
 
     public void testHandlesPrimitivesAndWrappers() {
