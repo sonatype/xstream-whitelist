@@ -88,7 +88,6 @@ import com.thoughtworks.xstream.converters.collections.SingletonMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeSetConverter;
 import com.thoughtworks.xstream.converters.extended.ColorConverter;
-import com.thoughtworks.xstream.converters.extended.DynamicProxyConverter;
 import com.thoughtworks.xstream.converters.extended.EncodedByteArrayConverter;
 import com.thoughtworks.xstream.converters.extended.FileConverter;
 import com.thoughtworks.xstream.converters.extended.FontConverter;
@@ -1086,8 +1085,8 @@ public class XStream {
 
         // disable java.lang.reflect converters if whitelist enabled
         if (typeWhitelist == null) {
-          registerConverter(
-              new DynamicProxyConverter(mapper, classLoaderReference), PRIORITY_NORMAL);
+          //registerConverter(
+          //    new DynamicProxyConverter(mapper, classLoaderReference), PRIORITY_NORMAL);
           registerConverter(new JavaClassConverter(classLoaderReference), PRIORITY_NORMAL);
           registerConverter(new JavaMethodConverter(classLoaderReference), PRIORITY_NORMAL);
           registerConverter(new JavaFieldConverter(classLoaderReference), PRIORITY_NORMAL);
