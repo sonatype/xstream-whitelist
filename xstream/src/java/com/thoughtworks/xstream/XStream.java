@@ -606,7 +606,10 @@ public class XStream {
 
     private void setupWhitelist() {
       // white-list jre bits otherwise not detected
-      typeWhitelist.allowType("java.util.Arrays$ArrayList");
+      typeWhitelist.allowType(
+          "java.util.Arrays$ArrayList",
+          "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate"
+      );
 
       // white-list restlet1x error types
       typeWhitelist.allowPackage("org.sonatype.plexus.rest.resource.error");
