@@ -164,36 +164,4 @@ public class TypeWhitelistTest
     underTest.allowPackage("test");
     underTest.ensureAllowed("test.Foo");
   }
-
-  @Test
-  public void frozenImmutable() {
-    assertThat(underTest.isFrozen(), is(false));
-    underTest.allowType("test.Foo");
-    underTest.freeze();
-    assertThat(underTest.isFrozen(), is(true));
-
-    try {
-      underTest.allowType("test");
-      fail();
-    }
-    catch (IllegalStateException e) {
-      // expected
-    }
-
-    try {
-      underTest.allowPackage("test");
-      fail();
-    }
-    catch (IllegalStateException e) {
-      // expected
-    }
-
-    try {
-      underTest.allowPattern("test");
-      fail();
-    }
-    catch (IllegalStateException e) {
-      // expected
-    }
-  }
 }

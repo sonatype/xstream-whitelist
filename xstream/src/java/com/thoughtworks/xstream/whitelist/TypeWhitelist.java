@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Type white-list.
@@ -39,22 +38,16 @@ public class TypeWhitelist
   @VisibleForTesting
   static final SystemProperty allowedPatternsProperty = new SystemProperty(TypeWhitelist.class, "allowedPatterns");
 
-  private final boolean allowAll;
-
   private final Set<String> allowedTypes = Sets.newHashSet();
 
   private final Set<String> allowedPackages = Sets.newHashSet();
 
   private final List<Pattern> allowedPatterns = Lists.newArrayList();
 
-  private boolean frozen = false;
+  private boolean allowAll;
 
   public TypeWhitelist() {
-    allowAll = allowAllProperty.get(Boolean.class, false);
-    if (allowAll) {
-      log.warn("All types are allowed");
-    }
-
+    setAllowAll(allowAllProperty.get(Boolean.class, false));
     configureDefaults();
   }
 
@@ -65,7 +58,6 @@ public class TypeWhitelist
         ", allowedTypes=" + allowedTypes +
         ", allowedPackages=" + allowedPackages +
         ", allowedPatterns=" + allowedPatterns +
-        ", frozen=" + frozen +
         '}';
   }
 
@@ -110,22 +102,10 @@ public class TypeWhitelist
     return allowAll;
   }
 
-  public void freeze() {
-    checkState(!frozen, "Already frozen");
-
-    frozen = true;
-    log.debug("White-list frozen");
-
-    if (log.isTraceEnabled()) {
-      log.trace("Allowed types:");
-      for (String name : sort(allowedTypes)) {
-        log.trace("  {}", name);
-      }
-
-      log.trace("Allowed packages:");
-      for (String name : sort(allowedPackages)) {
-        log.trace("  {}", name);
-      }
+  public void setAllowAll(final boolean allowAll) {
+    this.allowAll = allowAll;
+    if (allowAll) {
+      log.warn("All types are allowed");
     }
   }
 
@@ -133,14 +113,6 @@ public class TypeWhitelist
     List<String> list = Lists.newArrayList(collection);
     Collections.sort(list);
     return list;
-  }
-
-  public boolean isFrozen() {
-    return frozen;
-  }
-
-  private void ensureNotFrozen() {
-    checkState(!frozen, "White-list is frozen and can not be mutated");
   }
 
   public Set<String> getAllowedTypes() {
@@ -153,7 +125,6 @@ public class TypeWhitelist
 
   public void allowType(final String... names) {
     checkNotNull(names);
-    ensureNotFrozen();
     for (String name : names) {
       if (name != null) {
         allowedTypes.add(name);
@@ -173,7 +144,6 @@ public class TypeWhitelist
 
   public void allowPackage(final String... names) {
     checkNotNull(names);
-    ensureNotFrozen();
     for (String name : names) {
       if (name != null) {
         allowedPackages.add(name);
@@ -193,7 +163,6 @@ public class TypeWhitelist
 
   public void allowPattern(final Pattern... patterns) {
     checkNotNull(patterns);
-    ensureNotFrozen();
     for (Pattern pattern : patterns) {
       if (pattern != null) {
         allowedPatterns.add(pattern);
