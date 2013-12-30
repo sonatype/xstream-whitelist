@@ -1034,7 +1034,7 @@ public class XStream {
     }
 
     protected void setupConverters() {
-        // isntall whitelist converter for sanity if whitelist enabled
+        // install whitelist converter if whitelist enabled
         if (typeWhitelist == null) {
           registerConverter(
               new ReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
