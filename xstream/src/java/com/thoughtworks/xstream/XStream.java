@@ -131,7 +131,6 @@ import com.thoughtworks.xstream.mapper.CachingMapper;
 import com.thoughtworks.xstream.mapper.ClassAliasingMapper;
 import com.thoughtworks.xstream.mapper.DefaultImplementationsMapper;
 import com.thoughtworks.xstream.mapper.DefaultMapper;
-import com.thoughtworks.xstream.mapper.DynamicProxyMapper;
 import com.thoughtworks.xstream.mapper.FieldAliasingMapper;
 import com.thoughtworks.xstream.mapper.ImmutableTypesMapper;
 import com.thoughtworks.xstream.mapper.ImplicitCollectionMapper;
@@ -664,8 +663,8 @@ public class XStream {
           mapper = new XStream11XmlFriendlyMapper(mapper);
       }
 
-      // disable dynamic-proxy mapper
-      mapper = new DynamicProxyMapper(mapper);
+      // disable dynamic-proxy mapper, its very dangerous
+      //mapper = new DynamicProxyMapper(mapper);
 
       //mapper = new PackageAliasingMapper(mapper);
 
@@ -1085,6 +1084,7 @@ public class XStream {
 
         // disable java.lang.reflect converters if whitelist enabled
         if (typeWhitelist == null) {
+          // always disable dynamic-proxy its very dangerous
           //registerConverter(
           //    new DynamicProxyConverter(mapper, classLoaderReference), PRIORITY_NORMAL);
           registerConverter(new JavaClassConverter(classLoaderReference), PRIORITY_NORMAL);
