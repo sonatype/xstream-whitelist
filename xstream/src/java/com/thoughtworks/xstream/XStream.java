@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URL;
+import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Calendar;
@@ -547,12 +548,18 @@ public class XStream {
 
         this.typeWhitelist = new TypeWhitelist();
 
+        setupWhitelist();
+
         if (reflectionProvider == null) {
             reflectionProvider = JVM.newReflectionProvider();
         }
         this.reflectionProvider = reflectionProvider;
         this.hierarchicalStreamDriver = driver;
-        this.classLoaderReference = classLoaderReference;
+
+        // wrap classloader with white-list aware classloader
+        this.classLoaderReference = new ClassLoaderReference(
+            wrapClassloader(classLoaderReference.getReference()));
+
         this.converterLookup = converterLookup;
         this.converterRegistry = converterRegistry;
         this.mapper = mapper == null ? buildMapper() : mapper;
@@ -565,7 +572,23 @@ public class XStream {
         setMode(XPATH_RELATIVE_REFERENCES);
     }
 
-    //private Mapper buildMapper() {
+  private void setupWhitelist() {
+    // if not created from restlet bridge, then allow all
+    if (!isRestletBridge()) {
+      typeWhitelist.setAllowAll(true);
+      return;
+    }
+
+    // some additional JRE types to white-list
+    typeWhitelist.allowType("java.util.Arrays$ArrayList");
+  }
+
+  private boolean isRestletBridge() {
+    // TODO: Inspect call-stack and determine if created from restlet-bridge
+    return false;
+  }
+
+  //private Mapper buildMapper() {
     //    Mapper mapper = new DefaultMapper(classLoaderReference);
     //    if (useXStream11XmlFriendlyMapper()) {
     //        mapper = new XStream11XmlFriendlyMapper(mapper);
@@ -2017,7 +2040,20 @@ public class XStream {
      * @since 1.1.1
      */
     public void setClassLoader(ClassLoader classLoader) {
-        classLoaderReference.setReference(classLoader);
+        classLoaderReference.setReference(wrapClassloader(classLoader));
+    }
+
+    private ClassLoader wrapClassloader(final ClassLoader classLoader) {
+      // Wrap classloader so that it will check if class-names are white-listed before allowing them to be loaded
+      return new SecureClassLoader(classLoader)
+      {
+        @Override
+        protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
+          log.trace("Load class: {}, resolve: {}", name, resolve);
+          typeWhitelist.ensureAllowed(name);
+          return super.loadClass(name, resolve);
+        }
+      };
     }
 
     /**
