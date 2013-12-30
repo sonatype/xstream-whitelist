@@ -74,9 +74,11 @@ import com.thoughtworks.xstream.converters.basic.LongConverter;
 import com.thoughtworks.xstream.converters.basic.NullConverter;
 import com.thoughtworks.xstream.converters.basic.ShortConverter;
 import com.thoughtworks.xstream.converters.basic.StringBufferConverter;
+import com.thoughtworks.xstream.converters.basic.StringBuilderConverter;
 import com.thoughtworks.xstream.converters.basic.StringConverter;
 import com.thoughtworks.xstream.converters.basic.URIConverter;
 import com.thoughtworks.xstream.converters.basic.URLConverter;
+import com.thoughtworks.xstream.converters.basic.UUIDConverter;
 import com.thoughtworks.xstream.converters.collections.ArrayConverter;
 import com.thoughtworks.xstream.converters.collections.BitSetConverter;
 import com.thoughtworks.xstream.converters.collections.CharArrayConverter;
@@ -87,7 +89,13 @@ import com.thoughtworks.xstream.converters.collections.SingletonCollectionConver
 import com.thoughtworks.xstream.converters.collections.SingletonMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeMapConverter;
 import com.thoughtworks.xstream.converters.collections.TreeSetConverter;
+import com.thoughtworks.xstream.converters.enums.EnumConverter;
+import com.thoughtworks.xstream.converters.enums.EnumMapConverter;
+import com.thoughtworks.xstream.converters.enums.EnumSetConverter;
+import com.thoughtworks.xstream.converters.extended.CharsetConverter;
 import com.thoughtworks.xstream.converters.extended.ColorConverter;
+import com.thoughtworks.xstream.converters.extended.CurrencyConverter;
+import com.thoughtworks.xstream.converters.extended.DurationConverter;
 import com.thoughtworks.xstream.converters.extended.EncodedByteArrayConverter;
 import com.thoughtworks.xstream.converters.extended.FileConverter;
 import com.thoughtworks.xstream.converters.extended.FontConverter;
@@ -97,10 +105,14 @@ import com.thoughtworks.xstream.converters.extended.JavaFieldConverter;
 import com.thoughtworks.xstream.converters.extended.JavaMethodConverter;
 import com.thoughtworks.xstream.converters.extended.LocaleConverter;
 import com.thoughtworks.xstream.converters.extended.LookAndFeelConverter;
+import com.thoughtworks.xstream.converters.extended.RegexPatternConverter;
 import com.thoughtworks.xstream.converters.extended.SqlDateConverter;
 import com.thoughtworks.xstream.converters.extended.SqlTimeConverter;
 import com.thoughtworks.xstream.converters.extended.SqlTimestampConverter;
+import com.thoughtworks.xstream.converters.extended.StackTraceElementConverter;
+import com.thoughtworks.xstream.converters.extended.SubjectConverter;
 import com.thoughtworks.xstream.converters.extended.TextAttributeConverter;
+import com.thoughtworks.xstream.converters.extended.ThrowableConverter;
 import com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter;
 import com.thoughtworks.xstream.converters.reflection.ExternalizableConverter;
 import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
@@ -131,6 +143,7 @@ import com.thoughtworks.xstream.mapper.CachingMapper;
 import com.thoughtworks.xstream.mapper.ClassAliasingMapper;
 import com.thoughtworks.xstream.mapper.DefaultImplementationsMapper;
 import com.thoughtworks.xstream.mapper.DefaultMapper;
+import com.thoughtworks.xstream.mapper.EnumMapper;
 import com.thoughtworks.xstream.mapper.FieldAliasingMapper;
 import com.thoughtworks.xstream.mapper.ImmutableTypesMapper;
 import com.thoughtworks.xstream.mapper.ImplicitCollectionMapper;
@@ -552,7 +565,7 @@ public class XStream {
         ClassLoaderReference classLoaderReference, Mapper mapper, ConverterLookup converterLookup,
         ConverterRegistry converterRegistry) {
 
-        // optional enable white-list
+        // optionally enable white-list
         if (isWhitelistEnabled()) {
           this.typeWhitelist = new TypeWhitelist();
           log.info("White-list enabled");
@@ -604,7 +617,11 @@ public class XStream {
     private void setupWhitelist() {
       // white-list jre bits otherwise not detected
       typeWhitelist.allowType(
-          "java.util.Arrays$ArrayList",
+          "java.util.Arrays$ArrayList"
+      );
+
+      // white-list some edge-case NX types
+      typeWhitelist.allowType(
           "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate"
       );
 
@@ -784,11 +801,12 @@ public class XStream {
         }
       };
 
-      if (JVM.is15()) {
-          mapper = buildMapperDynamically(
-              "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
-              new Object[]{mapper});
-      }
+      //if (JVM.is15()) {
+      //    mapper = buildMapperDynamically(
+      //        "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
+      //        new Object[]{mapper});
+      //}
+      mapper = new EnumMapper(mapper);
 
       //mapper = new LocalConversionMapper(mapper);
 
@@ -845,21 +863,17 @@ public class XStream {
       return mapper;
     }
 
-    private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
-        Object[] constructorParamValues) {
-        if (typeWhitelist != null) {
-          typeWhitelist.allowType(className);
-          typeWhitelist.allowType(constructorParamTypes);
-        }
-        try {
-            Class type = Class.forName(className, false, classLoaderReference.getReference());
-            Constructor constructor = type.getConstructor(constructorParamTypes);
-            return (Mapper)constructor.newInstance(constructorParamValues);
-        } catch (Exception e) {
-            throw new com.thoughtworks.xstream.InitializationException(
-                "Could not instantiate mapper : " + className, e);
-        }
-    }
+    //private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
+    //    Object[] constructorParamValues) {
+    //    try {
+    //        Class type = Class.forName(className, false, classLoaderReference.getReference());
+    //        Constructor constructor = type.getConstructor(constructorParamTypes);
+    //        return (Mapper)constructor.newInstance(constructorParamValues);
+    //    } catch (Exception e) {
+    //        throw new com.thoughtworks.xstream.InitializationException(
+    //            "Could not instantiate mapper : " + className, e);
+    //    }
+    //}
 
     protected MapperWrapper wrapMapper(MapperWrapper next) {
         return next;
@@ -1031,7 +1045,7 @@ public class XStream {
     }
 
     protected void setupConverters() {
-        // install whitelist converter if whitelist enabled
+        // install white-list converter if enabled
         if (typeWhitelist == null) {
           registerConverter(
               new ReflectionConverter(mapper, reflectionProvider), PRIORITY_VERY_LOW);
@@ -1103,78 +1117,85 @@ public class XStream {
         registerConverter(new LocaleConverter(), PRIORITY_NORMAL);
         registerConverter(new GregorianCalendarConverter(), PRIORITY_NORMAL);
 
-        if (JVM.is14()) {
-            // late bound converters - allows XStream to be compiled on earlier JDKs
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.extended.SubjectConverter",
-                PRIORITY_NORMAL, new Class[]{Mapper.class}, new Object[]{mapper});
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.extended.ThrowableConverter",
-                PRIORITY_NORMAL, new Class[]{ConverterLookup.class},
-                new Object[]{converterLookup});
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.extended.StackTraceElementConverter",
-                PRIORITY_NORMAL, null, null);
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.extended.CurrencyConverter",
-                PRIORITY_NORMAL, null, null);
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.extended.RegexPatternConverter",
-                PRIORITY_NORMAL, null, null);
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.extended.CharsetConverter",
-                PRIORITY_NORMAL, null, null);
-        }
+        //if (JVM.is14()) {
+        //    // late bound converters - allows XStream to be compiled on earlier JDKs
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.extended.SubjectConverter",
+        //        PRIORITY_NORMAL, new Class[]{Mapper.class}, new Object[]{mapper});
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.extended.ThrowableConverter",
+        //        PRIORITY_NORMAL, new Class[]{ConverterLookup.class},
+        //        new Object[]{converterLookup});
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.extended.StackTraceElementConverter",
+        //        PRIORITY_NORMAL, null, null);
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.extended.CurrencyConverter",
+        //        PRIORITY_NORMAL, null, null);
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.extended.RegexPatternConverter",
+        //        PRIORITY_NORMAL, null, null);
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.extended.CharsetConverter",
+        //        PRIORITY_NORMAL, null, null);
+        //}
+        registerConverter(new SubjectConverter(mapper), PRIORITY_NORMAL);
+        registerConverter(new ThrowableConverter(converterLookup), PRIORITY_NORMAL);
+        registerConverter(new StackTraceElementConverter(), PRIORITY_NORMAL);
+        registerConverter(new CurrencyConverter(), PRIORITY_NORMAL);
+        registerConverter(new RegexPatternConverter(), PRIORITY_NORMAL);
+        registerConverter(new CharsetConverter(), PRIORITY_NORMAL);
 
-        if (JVM.is15()) {
-            // late bound converters - allows XStream to be compiled on earlier JDKs
-            if (JVM.loadClassForName("javax.xml.datatype.Duration") != null) {
-                registerConverterDynamically(
-                    "com.thoughtworks.xstream.converters.extended.DurationConverter",
-                    PRIORITY_NORMAL, null, null);
-            }
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.enums.EnumConverter", PRIORITY_NORMAL,
-                null, null);
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.enums.EnumSetConverter", PRIORITY_NORMAL,
-                new Class[]{Mapper.class}, new Object[]{mapper});
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.enums.EnumMapConverter", PRIORITY_NORMAL,
-                new Class[]{Mapper.class}, new Object[]{mapper});
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.basic.StringBuilderConverter",
-                PRIORITY_NORMAL, null, null);
-            registerConverterDynamically(
-                "com.thoughtworks.xstream.converters.basic.UUIDConverter", PRIORITY_NORMAL,
-                null, null);
-        }
+        //if (JVM.is15()) {
+        //    // late bound converters - allows XStream to be compiled on earlier JDKs
+        //    if (JVM.loadClassForName("javax.xml.datatype.Duration") != null) {
+        //        registerConverterDynamically(
+        //            "com.thoughtworks.xstream.converters.extended.DurationConverter",
+        //            PRIORITY_NORMAL, null, null);
+        //    }
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.enums.EnumConverter", PRIORITY_NORMAL,
+        //        null, null);
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.enums.EnumSetConverter", PRIORITY_NORMAL,
+        //        new Class[]{Mapper.class}, new Object[]{mapper});
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.enums.EnumMapConverter", PRIORITY_NORMAL,
+        //        new Class[]{Mapper.class}, new Object[]{mapper});
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.basic.StringBuilderConverter",
+        //        PRIORITY_NORMAL, null, null);
+        //    registerConverterDynamically(
+        //        "com.thoughtworks.xstream.converters.basic.UUIDConverter", PRIORITY_NORMAL,
+        //        null, null);
+        //}
+        registerConverter(new DurationConverter(), PRIORITY_NORMAL);
+        registerConverter(new EnumConverter(), PRIORITY_NORMAL);
+        registerConverter(new EnumSetConverter(mapper), PRIORITY_NORMAL);
+        registerConverter(new EnumMapConverter(mapper), PRIORITY_NORMAL);
+        registerConverter(new StringBuilderConverter(), PRIORITY_NORMAL);
+        registerConverter(new UUIDConverter(), PRIORITY_NORMAL);
 
         registerConverter(
             new SelfStreamingInstanceChecker(converterLookup, this), PRIORITY_NORMAL);
     }
 
-    private void registerConverterDynamically(String className, int priority,
-        Class[] constructorParamTypes, Object[] constructorParamValues) {
-
-        if (typeWhitelist != null) {
-          typeWhitelist.allowType(className);
-          typeWhitelist.allowType(constructorParamTypes);
-        }
-        try {
-            Class type = Class.forName(className, false, classLoaderReference.getReference());
-            Constructor constructor = type.getConstructor(constructorParamTypes);
-            Object instance = constructor.newInstance(constructorParamValues);
-            if (instance instanceof Converter) {
-                registerConverter((Converter)instance, priority);
-            } else if (instance instanceof SingleValueConverter) {
-                registerConverter((SingleValueConverter)instance, priority);
-            }
-        } catch (Exception e) {
-            throw new com.thoughtworks.xstream.InitializationException(
-                "Could not instantiate converter : " + className, e);
-        }
-    }
+    //private void registerConverterDynamically(String className, int priority,
+    //    Class[] constructorParamTypes, Object[] constructorParamValues) {
+    //    try {
+    //        Class type = Class.forName(className, false, classLoaderReference.getReference());
+    //        Constructor constructor = type.getConstructor(constructorParamTypes);
+    //        Object instance = constructor.newInstance(constructorParamValues);
+    //        if (instance instanceof Converter) {
+    //            registerConverter((Converter)instance, priority);
+    //        } else if (instance instanceof SingleValueConverter) {
+    //            registerConverter((SingleValueConverter)instance, priority);
+    //        }
+    //    } catch (Exception e) {
+    //        throw new com.thoughtworks.xstream.InitializationException(
+    //            "Could not instantiate converter : " + className, e);
+    //    }
+    //}
 
     protected void setupImmutableTypes() {
         if (immutableTypesMapper == null) {
