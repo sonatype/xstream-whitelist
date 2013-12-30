@@ -53,6 +53,7 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.thoughtworks.xstream.converters.ConversionException;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.ConverterLookup;
@@ -585,7 +586,8 @@ public class XStream {
         setMode(XPATH_RELATIVE_REFERENCES);
     }
 
-    private static final SystemProperty whitelistForce = new SystemProperty(XStream.class, "whitelistForce");
+    @VisibleForTesting
+    static final SystemProperty whitelistForce = new SystemProperty(XStream.class, "whitelistForce");
 
     private boolean isWhitelistEnabled() {
       if (whitelistForce.get(Boolean.class, false)) {
@@ -846,6 +848,10 @@ public class XStream {
 
     private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
         Object[] constructorParamValues) {
+        if (typeWhitelist != null) {
+          typeWhitelist.allowType(className);
+          typeWhitelist.allowType(constructorParamTypes);
+        }
         try {
             Class type = Class.forName(className, false, classLoaderReference.getReference());
             Constructor constructor = type.getConstructor(constructorParamTypes);
@@ -1154,6 +1160,11 @@ public class XStream {
 
     private void registerConverterDynamically(String className, int priority,
         Class[] constructorParamTypes, Object[] constructorParamValues) {
+
+        if (typeWhitelist != null) {
+          typeWhitelist.allowType(className);
+          typeWhitelist.allowType(constructorParamTypes);
+        }
         try {
             Class type = Class.forName(className, false, classLoaderReference.getReference());
             Constructor constructor = type.getConstructor(constructorParamTypes);
