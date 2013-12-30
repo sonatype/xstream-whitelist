@@ -665,10 +665,8 @@ public class XStream {
           mapper = new XStream11XmlFriendlyMapper(mapper);
       }
 
-      // disable dynamic-proxy mapper if white-list enabled
-      if (typeWhitelist == null) {
-        mapper = new DynamicProxyMapper(mapper);
-      }
+      // disable dynamic-proxy mapper
+      mapper = new DynamicProxyMapper(mapper);
 
       //mapper = new PackageAliasingMapper(mapper);
 

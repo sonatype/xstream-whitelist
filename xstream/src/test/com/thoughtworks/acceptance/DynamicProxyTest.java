@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.thoughtworks.acceptance.objects.SampleDynamicProxy;
+import org.junit.Ignore;
 
+@Ignore("Disabled due as this is potentially very dangerous")
 public class DynamicProxyTest extends AbstractAcceptanceTest {
     public static class ClassWithProxyMember {
         SampleDynamicProxy.InterfaceOne one;
