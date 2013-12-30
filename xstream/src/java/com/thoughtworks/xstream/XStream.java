@@ -335,7 +335,7 @@ public class XStream {
     private static final String ANNOTATION_MAPPER_TYPE = "com.thoughtworks.xstream.mapper.AnnotationMapper";
     private static final Pattern IGNORE_ALL = Pattern.compile(".*");
 
-    private TypeWhitelist typeWhitelist;
+    private final TypeWhitelist typeWhitelist;
 
     /**
      * Constructs a default XStream.
