@@ -124,7 +124,9 @@ public class TypeWhitelist
   }
 
   public void allowType(final String... names) {
-    checkNotNull(names);
+    if (names == null) {
+      return;
+    }
     for (String name : names) {
       if (name != null) {
         allowedTypes.add(name);
@@ -134,7 +136,9 @@ public class TypeWhitelist
   }
 
   public void allowType(final Class... types) {
-    checkNotNull(types);
+    if (types == null) {
+      return;
+    }
     for (Class type : types) {
       if (type != null) {
         allowType(type.getName());
@@ -143,7 +147,9 @@ public class TypeWhitelist
   }
 
   public void allowPackage(final String... names) {
-    checkNotNull(names);
+    if (names == null) {
+      return;
+    }
     for (String name : names) {
       if (name != null) {
         allowedPackages.add(name);
@@ -153,7 +159,9 @@ public class TypeWhitelist
   }
 
   public void allowPackage(final Package... packages) {
-    checkNotNull(packages);
+    if (packages == null) {
+      return;
+    }
     for (Package pkg : packages) {
       if (pkg != null) {
         allowPackage(pkg.getName());
@@ -162,7 +170,9 @@ public class TypeWhitelist
   }
 
   public void allowPattern(final Pattern... patterns) {
-    checkNotNull(patterns);
+    if (patterns == null) {
+      return;
+    }
     for (Pattern pattern : patterns) {
       if (pattern != null) {
         allowedPatterns.add(pattern);
@@ -172,7 +182,9 @@ public class TypeWhitelist
   }
 
   public void allowPattern(final String... patterns) {
-    checkNotNull(patterns);
+    if (patterns == null) {
+      return;
+    }
     for (String pattern : patterns) {
       if (pattern != null) {
         allowPattern(compilePattern(pattern));
@@ -251,7 +263,7 @@ public class TypeWhitelist
   public void ensureAllowed(final String name) throws TypeNotAllowedException {
     checkNotNull(name);
     if (!isAllowed(name)) {
-      log.warn("Type is NOT allowed: {}", name);
+      log.warn("Type NOT allowed: {}", name);
       throw new TypeNotAllowedException(name);
     }
   }
