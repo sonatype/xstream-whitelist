@@ -1021,10 +1021,6 @@ public class XStream {
       }
 
       public boolean canConvert(final Class type) {
-        if (typeWhitelist == null) {
-          return true;
-        }
-
         log.trace("Checking conversion of: {}", type);
 
         if (typeWhitelist.isAllowed(type)) {
