@@ -11,11 +11,13 @@
  */
 package com.thoughtworks.xstream.converters.extended;
 
-import com.thoughtworks.acceptance.AbstractAcceptanceTest;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import com.thoughtworks.acceptance.AbstractAcceptanceTest;
+import org.junit.Ignore;
+
+@Ignore
 public class JavaMethodConverterTest extends AbstractAcceptanceTest {
 
     public void testSupportsPublicMethods() throws Exception {
