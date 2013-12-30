@@ -10,16 +10,6 @@
  */
 package com.thoughtworks.acceptance;
 
-import com.thoughtworks.acceptance.objects.Software;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-import com.thoughtworks.xstream.testutil.DynamicSecurityManager;
-
-import junit.framework.TestCase;
-
-import org.apache.commons.lang.StringUtils;
-
 import java.io.File;
 import java.io.FilePermission;
 import java.lang.reflect.ReflectPermission;
@@ -30,6 +20,14 @@ import java.security.Policy;
 import java.security.cert.Certificate;
 import java.util.Iterator;
 import java.util.PropertyPermission;
+
+import com.thoughtworks.acceptance.objects.Software;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+import com.thoughtworks.xstream.testutil.DynamicSecurityManager;
+import junit.framework.TestCase;
+import org.apache.commons.lang.StringUtils;
 
 
 /**
@@ -59,7 +57,10 @@ public class SecurityManagerTest extends TestCase {
         File testClasses = new File(System.getProperty("user.dir"), "target/test-classes/-");
         String[] javaClassPath = StringUtils.split(System.getProperty("java.class.path"), File.pathSeparatorChar);
         File javaHome = new File(System.getProperty("java.home"), "-");
-        
+
+        // need permission for reading whitelist confiuration properties
+        sm.addPermission(source, new PropertyPermission("*", "read,write"));
+
         // necessary permission start here
         sm.addPermission(source, new FilePermission(mainClasses.toString(), "read"));
         sm.addPermission(source, new FilePermission(testClasses.toString(), "read"));
