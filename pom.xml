@@ -89,9 +89,9 @@
 
   <modules>
     <module>xstream</module>
-    <module>xstream-hibernate</module>
-    <module>xstream-benchmark</module>
-    <module>xstream-distribution</module>
+    <!--<module>xstream-hibernate</module>-->
+    <!--<module>xstream-benchmark</module>-->
+    <!--<module>xstream-distribution</module>-->
   </modules>
 
   <licenses>
