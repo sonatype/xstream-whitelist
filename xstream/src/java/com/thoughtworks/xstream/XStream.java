@@ -123,6 +123,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.StatefulWriter;
 import com.thoughtworks.xstream.io.xml.XppDriver;
 import com.thoughtworks.xstream.mapper.AnnotationConfiguration;
+import com.thoughtworks.xstream.mapper.AnnotationMapper;
 import com.thoughtworks.xstream.mapper.ArrayMapper;
 import com.thoughtworks.xstream.mapper.AttributeAliasingMapper;
 import com.thoughtworks.xstream.mapper.AttributeMapper;
@@ -335,7 +336,7 @@ public class XStream {
     private static final String ANNOTATION_MAPPER_TYPE = "com.thoughtworks.xstream.mapper.AnnotationMapper";
     private static final Pattern IGNORE_ALL = Pattern.compile(".*");
 
-    private final TypeWhitelist typeWhitelist;
+    private TypeWhitelist typeWhitelist;
 
     /**
      * Constructs a default XStream.
@@ -620,179 +621,228 @@ public class XStream {
       );
     }
 
-    private Mapper buildMapper() {
-        Mapper mapper = new DefaultMapper(classLoaderReference);
-        if (useXStream11XmlFriendlyMapper()) {
-            mapper = new XStream11XmlFriendlyMapper(mapper);
-        }
-        mapper = new DynamicProxyMapper(mapper);
-        mapper = new PackageAliasingMapper(mapper);
-        mapper = new ClassAliasingMapper(mapper);
-        mapper = new FieldAliasingMapper(mapper);
-        mapper = new AttributeAliasingMapper(mapper);
-        mapper = new SystemAttributeAliasingMapper(mapper);
-        mapper = new ImplicitCollectionMapper(mapper);
-        mapper = new OuterClassMapper(mapper);
-        mapper = new ArrayMapper(mapper);
-        mapper = new DefaultImplementationsMapper(mapper);
-        mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
-        if (JVM.is15()) {
-            mapper = buildMapperDynamically(
-                "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
-                new Object[]{mapper});
-        }
-        mapper = new LocalConversionMapper(mapper);
-        mapper = new ImmutableTypesMapper(mapper);
-        if (JVM.is15()) {
-            mapper = buildMapperDynamically(ANNOTATION_MAPPER_TYPE, new Class[]{
-                Mapper.class, ConverterRegistry.class, ConverterLookup.class,
-                ClassLoaderReference.class, ReflectionProvider.class}, new Object[]{
-                mapper, converterLookup, converterLookup, classLoaderReference,
-                reflectionProvider});
-        }
-        mapper = wrapMapper((MapperWrapper)mapper);
-        mapper = new CachingMapper(mapper);
-        return mapper;
-    }
-
     //private Mapper buildMapper() {
-    //  Mapper mapper = new DefaultMapper(classLoaderReference);
-    //
-    //  if (useXStream11XmlFriendlyMapper()) {
-    //      mapper = new XStream11XmlFriendlyMapper(mapper);
-    //  }
-    //
-    //  // disable dynamic-proxy mapper if white-list enabled
-    //  if (typeWhitelist == null) {
-    //    mapper = new DynamicProxyMapper(mapper);
-    //  }
-    //
-    //  // white-list any aliased packages
-    //  mapper = new PackageAliasingMapper(mapper)
-    //  {
-    //    @Override
-    //    public void addPackageAlias(final String name, final String pkg) {
-    //      super.addPackageAlias(name, pkg);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowPackage(pkg);
-    //      }
-    //    }
-    //  };
-    //
-    //  // white-list any aliased types
-    //  mapper = new ClassAliasingMapper(mapper)
-    //  {
-    //    @Override
-    //    public void addClassAlias(final String name, final Class type) {
-    //      super.addClassAlias(name, type);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowType(type);
-    //      }
-    //    }
-    //
-    //    @Override
-    //    public void addTypeAlias(final String name, final Class type) {
-    //      super.addTypeAlias(name, type);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowType(type);
-    //      }
-    //    }
-    //  };
-    //
-    //  // white-list container type for aliased fields
-    //  mapper = new FieldAliasingMapper(mapper)
-    //  {
-    //    @Override
-    //    public void addFieldAlias(final String alias, final Class type, final String fieldName) {
-    //      super.addFieldAlias(alias, type, fieldName);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowType(type);
-    //      }
-    //    }
-    //  };
-    //
-    //  mapper = new AttributeAliasingMapper(mapper);
-    //  mapper = new SystemAttributeAliasingMapper(mapper);
-    //
-    //  // white-list implicit collection defined-in and item-types
-    //  mapper = new ImplicitCollectionMapper(mapper)
-    //  {
-    //    @Override
-    //    public void add(final Class definedIn,
-    //                    final String fieldName,
-    //                    final String itemFieldName,
-    //                    final Class itemType,
-    //                    final String keyFieldName)
-    //    {
-    //      super.add(definedIn, fieldName, itemFieldName, itemType, keyFieldName);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowType(definedIn, itemType);
-    //      }
-    //    }
-    //  };
-    //
-    //  mapper = new OuterClassMapper(mapper);
-    //  mapper = new ArrayMapper(mapper);
-    //
-    //  // white-list default implementations
-    //  mapper = new DefaultImplementationsMapper(mapper)
-    //  {
-    //    @Override
-    //    public void addDefaultImplementation(final Class defaultImplementation, final Class ofType) {
-    //      super.addDefaultImplementation(defaultImplementation, ofType);
-    //      if (typeWhitelist != null) {
-    //        if (defaultImplementation != null) {
-    //          typeWhitelist.allowType(defaultImplementation);
-    //        }
-    //        if (ofType != null) {
-    //          typeWhitelist.allowType(ofType);
-    //        }
-    //      }
-    //    }
-    //  };
-    //  mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
-    //  mapper = new EnumMapper(mapper);
-    //
-    //  // white-list defined-in classes for local converters
-    //  mapper = new LocalConversionMapper(mapper)
-    //  {
-    //    @Override
-    //    public void registerLocalConverter(final Class definedIn, final String fieldName, final Converter converter) {
-    //      super.registerLocalConverter(definedIn, fieldName, converter);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowType(definedIn);
-    //      }
-    //    }
-    //  };
-    //
-    //  // white-list immutable types
-    //  mapper = new ImmutableTypesMapper(mapper)
-    //  {
-    //    @Override
-    //    public void addImmutableType(final Class type) {
-    //      super.addImmutableType(type);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowType(type);
-    //      }
-    //    }
-    //  };
-    //
-    //  // white-list types with annotations
-    //  mapper = new AnnotationMapper(mapper, converterRegistry, converterLookup, classLoaderReference, reflectionProvider)
-    //  {
-    //    @Override
-    //    public void processAnnotations(final Class[] initialTypes) {
-    //      super.processAnnotations(initialTypes);
-    //      if (typeWhitelist != null) {
-    //        typeWhitelist.allowType(initialTypes);
-    //      }
-    //    }
-    //  };
-    //
-    //  mapper = new CachingMapper(mapper);
-    //
-    //  return mapper;
+        //Mapper mapper = new DefaultMapper(classLoaderReference);
+        //if (useXStream1/1XmlFriendlyMapper()) {
+        //    mapper = new XStream11XmlFriendlyMapper(mapper);
+        //}
+        //mapper = new DynamicProxyMapper(mapper);
+        //mapper = new PackageAliasingMapper(mapper);
+        //mapper = new ClassAliasingMapper(mapper);
+        //mapper = new FieldAliasingMapper(mapper);
+        //mapper = new AttributeAliasingMapper(mapper);
+        //mapper = new SystemAttributeAliasingMapper(mapper);
+        //mapper = new ImplicitCollectionMapper(mapper);
+        //mapper = new OuterClassMapper(mapper);
+        //mapper = new ArrayMapper(mapper);
+        //mapper = new DefaultImplementationsMapper(mapper);
+        //mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
+        //if (JVM.is15()) {
+        //    mapper = buildMapperDynamically(
+        //        "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
+        //        new Object[]{mapper});
+        //}
+        //mapper = new LocalConversionMapper(mapper);
+        //mapper = new ImmutableTypesMapper(mapper);
+        //if (JVM.is15()) {
+        //    mapper = buildMapperDynamically(ANNOTATION_MAPPER_TYPE, new Class[]{
+        //        Mapper.class, ConverterRegistry.class, ConverterLookup.class,
+        //        ClassLoaderReference.class, ReflectionProvider.class}, new Object[]{
+        //        mapper, converterLookup, converterLookup, classLoaderReference,
+        //        reflectionProvider});
+        //}
+        //mapper = wrapMapper((MapperWrapper)mapper);
+        //mapper = new CachingMapper(mapper);
+        //return mapper;
     //}
+
+    private Mapper buildMapper() {
+      Mapper mapper = new DefaultMapper(classLoaderReference);
+
+      if (useXStream11XmlFriendlyMapper()) {
+          mapper = new XStream11XmlFriendlyMapper(mapper);
+      }
+
+      // disable dynamic-proxy mapper if white-list enabled
+      if (typeWhitelist == null) {
+        mapper = new DynamicProxyMapper(mapper);
+      }
+
+      //mapper = new PackageAliasingMapper(mapper);
+
+      // white-list any aliased packages
+      mapper = new PackageAliasingMapper(mapper)
+      {
+        @Override
+        public void addPackageAlias(final String name, final String pkg) {
+          super.addPackageAlias(name, pkg);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowPackage(pkg);
+          }
+        }
+      };
+
+      //mapper = new ClassAliasingMapper(mapper);
+
+      // white-list any aliased types
+      mapper = new ClassAliasingMapper(mapper)
+      {
+        @Override
+        public void addClassAlias(final String name, final Class type) {
+          super.addClassAlias(name, type);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(type);
+          }
+        }
+
+        @Override
+        public void addTypeAlias(final String name, final Class type) {
+          super.addTypeAlias(name, type);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(type);
+          }
+        }
+      };
+
+      //mapper = new FieldAliasingMapper(mapper);
+
+      // white-list container type for aliased fields
+      mapper = new FieldAliasingMapper(mapper)
+      {
+        @Override
+        public void addFieldAlias(final String alias, final Class type, final String fieldName) {
+          super.addFieldAlias(alias, type, fieldName);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(type);
+          }
+        }
+      };
+
+      mapper = new AttributeAliasingMapper(mapper);
+      mapper = new SystemAttributeAliasingMapper(mapper);
+
+      //mapper = new ImplicitCollectionMapper(mapper);
+
+      // white-list implicit collection defined-in and item-types
+      mapper = new ImplicitCollectionMapper(mapper)
+      {
+        @Override
+        public void add(final Class definedIn,
+                        final String fieldName,
+                        final String itemFieldName,
+                        final Class itemType,
+                        final String keyFieldName)
+        {
+          super.add(definedIn, fieldName, itemFieldName, itemType, keyFieldName);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(definedIn, itemType);
+          }
+        }
+      };
+
+      mapper = new OuterClassMapper(mapper);
+      mapper = new ArrayMapper(mapper);
+
+      //mapper = new DefaultImplementationsMapper(mapper);
+
+      // white-list default implementations
+      mapper = new DefaultImplementationsMapper(mapper)
+      {
+        @Override
+        public void addDefaultImplementation(final Class defaultImplementation, final Class ofType) {
+          super.addDefaultImplementation(defaultImplementation, ofType);
+          if (typeWhitelist != null) {
+            if (defaultImplementation != null) {
+              typeWhitelist.allowType(defaultImplementation);
+            }
+            if (ofType != null) {
+              typeWhitelist.allowType(ofType);
+            }
+          }
+        }
+      };
+
+      //mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider);
+
+      mapper = new AttributeMapper(mapper, converterLookup, reflectionProvider)
+      {
+        @Override
+        public void addAttributeFor(final String fieldName, final Class type) {
+          super.addAttributeFor(fieldName, type);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(type);
+          }
+        }
+
+        @Override
+        public void addAttributeFor(final Class type) {
+          super.addAttributeFor(type);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(type);
+          }
+        }
+      };
+
+      if (JVM.is15()) {
+          mapper = buildMapperDynamically(
+              "com.thoughtworks.xstream.mapper.EnumMapper", new Class[]{Mapper.class},
+              new Object[]{mapper});
+      }
+
+      //mapper = new LocalConversionMapper(mapper);
+
+      // white-list defined-in classes for local converters
+      mapper = new LocalConversionMapper(mapper)
+      {
+        @Override
+        public void registerLocalConverter(final Class definedIn, final String fieldName, final Converter converter) {
+          super.registerLocalConverter(definedIn, fieldName, converter);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(definedIn);
+          }
+        }
+      };
+
+      //mapper = new ImmutableTypesMapper(mapper);
+
+      // white-list immutable types
+      mapper = new ImmutableTypesMapper(mapper)
+      {
+        @Override
+        public void addImmutableType(final Class type) {
+          super.addImmutableType(type);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(type);
+          }
+        }
+      };
+
+      //if (JVM.is15()) {
+      //    mapper = buildMapperDynamically(ANNOTATION_MAPPER_TYPE, new Class[]{
+      //        Mapper.class, ConverterRegistry.class, ConverterLookup.class,
+      //        ClassLoaderReference.class, ReflectionProvider.class}, new Object[]{
+      //        mapper, converterLookup, converterLookup, classLoaderReference,
+      //        reflectionProvider});
+      //}
+
+      // white-list types with annotations
+      mapper = new AnnotationMapper(mapper, converterRegistry, converterLookup, classLoaderReference, reflectionProvider)
+      {
+        @Override
+        public void processAnnotations(final Class[] initialTypes) {
+          super.processAnnotations(initialTypes);
+          if (typeWhitelist != null) {
+            typeWhitelist.allowType(initialTypes);
+          }
+        }
+      };
+
+      mapper = wrapMapper((MapperWrapper)mapper);
+
+      mapper = new CachingMapper(mapper);
+
+      return mapper;
+    }
 
     private Mapper buildMapperDynamically(String className, Class[] constructorParamTypes,
         Object[] constructorParamValues) {
