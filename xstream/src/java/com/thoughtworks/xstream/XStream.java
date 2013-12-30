@@ -556,7 +556,7 @@ public class XStream {
         this.reflectionProvider = reflectionProvider;
         this.hierarchicalStreamDriver = driver;
 
-        // wrap classloader with white-list aware classloader
+        // wrap class-loader with white-list aware class-loader
         this.classLoaderReference = new ClassLoaderReference(
             wrapClassloader(classLoaderReference.getReference()));
 
