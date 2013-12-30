@@ -15,6 +15,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import org.junit.Ignore;
+
+@Ignore
 public class ReflectionClassesTest extends AbstractAcceptanceTest {
     public static class StupidObject {
         public String aField;
