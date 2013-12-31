@@ -627,8 +627,11 @@ public class XStream {
           // white-list restlet1x error types
           "org.sonatype.plexus.rest.resource.error",
 
-          // white-list procurement treeview types for 2.0.x compat
-          "com.sonatype.nexus.procurement.treeview"
+          // white-list procurement treeview types for early 2.x compat
+          "com.sonatype.nexus.procurement.treeview",
+
+          // white-list staging api type for early 2.x compat
+          "com.sonatype.nexus.staging.api"
       );
 
       typeWhitelist.allowPattern(
