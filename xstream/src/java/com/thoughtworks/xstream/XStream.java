@@ -615,18 +615,21 @@ public class XStream {
     }
 
     private void setupWhitelist() {
-      // white-list jre bits otherwise not detected
       typeWhitelist.allowType(
-          "java.util.Arrays$ArrayList"
-      );
+          // white-list jre bits otherwise not detected
+          "java.util.Arrays$ArrayList",
 
-      // white-list some edge-case NX types
-      typeWhitelist.allowType(
+          // white-list some edge-case NX types
           "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate"
       );
 
-      // white-list restlet1x error types
-      typeWhitelist.allowPackage("org.sonatype.plexus.rest.resource.error");
+      typeWhitelist.allowPackage(
+          // white-list restlet1x error types
+          "org.sonatype.plexus.rest.resource.error",
+
+          // white-list procurement treeview types for 2.0.x compat
+          "com.sonatype.nexus.procurement.treeview"
+      );
 
       typeWhitelist.allowPattern(
           // white-list sonatype core model patterns
