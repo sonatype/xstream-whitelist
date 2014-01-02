@@ -1,6 +1,10 @@
 package com.thoughtworks.xstream.whitelist;
 
 import org.sonatype.plexus.rest.PlexusRestletApplicationBridge;
+import org.sonatype.test.AnotherDTO;
+import org.sonatype.test.TypeDto;
+import org.sonatype.test.TypeRequest;
+import org.sonatype.test.TypeResponse;
 
 import com.thoughtworks.xstream.XStream;
 import org.junit.Before;
@@ -44,22 +48,12 @@ public class NexusWhitelistTest
     }
   }
 
-  public static class TypeDto
-  {
-    // empty
-  }
-
   @Test
   public void dtoType() {
     String xml = plain.toXML(new TypeDto());
     Object obj = underTest.fromXML(xml);
     assertThat(obj, notNullValue());
     assertThat(obj, instanceOf(TypeDto.class));
-  }
-
-  public static class AnotherDTO
-  {
-    // empty
   }
 
   @Test
@@ -70,22 +64,12 @@ public class NexusWhitelistTest
     assertThat(obj, instanceOf(AnotherDTO.class));
   }
 
-  public static class TypeRequest
-  {
-    // empty
-  }
-
   @Test
   public void requestType() {
     String xml = plain.toXML(new TypeRequest());
     Object obj = underTest.fromXML(xml);
     assertThat(obj, notNullValue());
     assertThat(obj, instanceOf(TypeRequest.class));
-  }
-
-  public static class TypeResponse
-  {
-    // empty
   }
 
   @Test

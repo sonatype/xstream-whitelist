@@ -640,10 +640,10 @@ public class XStream {
           "^(org|com)\\.sonatype\\..*\\.dto\\..*",
 
           // white-list types that appear to be entities
-          ".*DTO$",
-          ".*Dto$",
-          ".*Request$",
-          ".*Response$"
+          "^(org|com)\\.sonatype\\..*DTO$",
+          "^(org|com)\\.sonatype\\..*Dto$",
+          "^(org|com)\\.sonatype\\..*Request$",
+          "^(org|com)\\.sonatype\\..*Response$"
       );
     }
 
