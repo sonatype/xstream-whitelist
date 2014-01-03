@@ -2,6 +2,7 @@ package com.thoughtworks.xstream.whitelist;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
+import java.beans.PropertyEditorSupport;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -70,7 +71,16 @@ public class SystemProperty
     checkNotNull(type);
     PropertyEditor editor = PropertyEditorManager.findEditor(type);
     if (editor == null) {
-      throw new RuntimeException("No property-editor for type: " + type.getName());
+      // HACK: Ensure we can always convert Boolean/Integer, seems like some JVM configurations can not do this?!
+      if (type == Boolean.class) {
+        editor = new BooleanPropertyEditor();
+      }
+      else if (type == Integer.class) {
+        editor = new IntegerPropertyEditor();
+      }
+      else {
+        throw new RuntimeException("No property-editor for type: " + type.getName());
+      }
     }
     String value = get();
     if (value == null) {
@@ -96,7 +106,7 @@ public class SystemProperty
   // TODO: This could probably be converted into a PropertyEditor, for now leave as custom code
 
   public List<String> asList() {
-    String value = properties().getProperty(name);
+    String value = get();
     if (value == null) {
       return Collections.emptyList();
     }
@@ -111,5 +121,32 @@ public class SystemProperty
   @Override
   public String toString() {
     return name + "=" + get();
+  }
+
+  private static class TextPropertyEditorSupport
+      extends PropertyEditorSupport
+  {
+    @Override
+    public void setAsText(final String text) {
+      super.setValue(text);
+    }
+  }
+
+  private static class BooleanPropertyEditor
+    extends TextPropertyEditorSupport
+  {
+    @Override
+    public Object getValue() {
+      return Boolean.valueOf(getAsText());
+    }
+  }
+
+  private static class IntegerPropertyEditor
+      extends TextPropertyEditorSupport
+  {
+    @Override
+    public Object getValue() {
+      return Integer.valueOf(getAsText());
+    }
   }
 }
