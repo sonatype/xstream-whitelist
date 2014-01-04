@@ -2228,6 +2228,7 @@ public class XStream {
       {
         @Override
         public Class<?> loadClass(final String name) throws ClassNotFoundException {
+          log.trace("Load class: {}", name);
           if (typeWhitelist != null) {
             typeWhitelist.ensureAllowed(name);
           }
@@ -2237,6 +2238,7 @@ public class XStream {
         // ensure no sub-class of ClassLoader can subvert this check
         @Override
         protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
+          log.trace("Load class: {}, resolve: {}", name, resolve);
           if (typeWhitelist != null) {
             typeWhitelist.ensureAllowed(name);
           }
