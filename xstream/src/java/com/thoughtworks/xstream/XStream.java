@@ -2218,7 +2218,7 @@ public class XStream {
      * 
      * @since 1.1.1
      */
-    public final void setClassLoader(ClassLoader classLoader) {
+    public void setClassLoader(ClassLoader classLoader) {
       classLoaderReference.setReference(wrapClassLoader(classLoader));
     }
 
@@ -2233,16 +2233,6 @@ public class XStream {
             typeWhitelist.ensureAllowed(name);
           }
           return classLoader.loadClass(name);
-        }
-
-        // ensure no sub-class of ClassLoader can subvert this check
-        @Override
-        protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
-          log.trace("Load class: {}, resolve: {}", name, resolve);
-          if (typeWhitelist != null) {
-            typeWhitelist.ensureAllowed(name);
-          }
-          return super.loadClass(name, resolve);
         }
       };
     }
