@@ -21,13 +21,13 @@ public class XStreamWhitelistTest
 
   @Before
   public void setUp() throws Exception {
-    XStream.whitelistForce.set(true);
+    XStream.whitelistForceProperty.set(true);
     xstream = new XStream();
   }
 
   @After
   public void tearDown() throws Exception {
-    XStream.whitelistForce.remove();
+    XStream.whitelistForceProperty.remove();
   }
 
   @Test

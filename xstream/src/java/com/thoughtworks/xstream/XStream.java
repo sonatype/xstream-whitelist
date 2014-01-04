@@ -31,7 +31,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URL;
-import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Calendar;
@@ -54,6 +53,7 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.thoughtworks.xstream.converters.ConversionException;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.ConverterLookup;
@@ -565,10 +565,11 @@ public class XStream {
         ClassLoaderReference classLoaderReference, Mapper mapper, ConverterLookup converterLookup,
         ConverterRegistry converterRegistry) {
 
+        log.trace("Created", new Throwable("MARKER"));
+
         // optionally enable white-list
         if (isWhitelistEnabled()) {
           this.typeWhitelist = new TypeWhitelist();
-          log.info("White-list enabled");
           setupWhitelist();
         }
         else {
@@ -582,8 +583,7 @@ public class XStream {
         this.hierarchicalStreamDriver = driver;
 
         // wrap class-loader with white-list aware class-loader
-        this.classLoaderReference = new ClassLoaderReference(
-            wrapClassloader(classLoaderReference.getReference()));
+        this.classLoaderReference = new ClassLoaderReference(wrapClassLoader(classLoaderReference.getReference()));
 
         this.converterLookup = converterLookup;
         this.converterRegistry = converterRegistry;
@@ -598,20 +598,56 @@ public class XStream {
     }
 
     @VisibleForTesting
-    static final SystemProperty whitelistForce = new SystemProperty(XStream.class, "whitelistForce");
+    static final SystemProperty whitelistForceProperty = new SystemProperty(XStream.class, "whitelistForce");
 
+    @VisibleForTesting
+    static final SystemProperty whitelistTrustedProperty = new SystemProperty(XStream.class, "whitelistTrusted");
+
+    /**
+     * Classes which create new XStream instances which are trusted and will have white-list disabled.
+     */
+    private static final Set<String> whitelistTrusted = Sets.newHashSet();
+
+    static {
+      Collections.addAll(whitelistTrusted,
+          // trust xstream usage when created in these locations
+          "org.sonatype.nexus.configuration.model.AbstractRevertableConfiguration",
+          "org.sonatype.nexus.configuration.model.DefaultConfigurationHelper"
+      );
+      whitelistTrusted.addAll(whitelistTrustedProperty.asList());
+    }
+
+    /**
+     * Determine if the white-list should be enabled for this instance.
+     * Will be disabled if detected to be constructed from a trusted location.
+     */
     private boolean isWhitelistEnabled() {
-      if (whitelistForce.get(Boolean.class, false)) {
+      if (whitelistForceProperty.get(Boolean.class, false)) {
         log.warn("White-list forced");
         return true;
       }
 
+      String createdFrom = null;
       for (StackTraceElement element : new Throwable().getStackTrace()) {
-        if ("org.sonatype.plexus.rest.PlexusRestletApplicationBridge".equals(element.getClassName())) {
-          return true;
+        // skip over com.thoughtworks.xstream.XStream calls (used by ctor and setup)
+        if (XStream.class.getName().equals(element.getClassName())) {
+          continue;
         }
+        // until we find the class which called new XStream
+        createdFrom = element.getClassName();
+        break;
       }
-      return false;
+      log.trace("Created from: {}", createdFrom);
+
+      // if the type creating new XStream is not trusted, then enable the white-list
+      boolean trusted = whitelistTrusted.contains(createdFrom);
+      log.info("White-list {} for {} usage by: {}", new Object[] {
+          (trusted ? "disabled" : "enabled"),
+          (trusted ? "trusted" : "untrusted"),
+          createdFrom
+      });
+
+      return !trusted;
     }
 
     private void setupWhitelist() {
@@ -2183,21 +2219,27 @@ public class XStream {
      * @since 1.1.1
      */
     public void setClassLoader(ClassLoader classLoader) {
-        classLoaderReference.setReference(wrapClassloader(classLoader));
+      classLoaderReference.setReference(wrapClassLoader(classLoader));
     }
 
-    private ClassLoader wrapClassloader(final ClassLoader classLoader) {
-      if (typeWhitelist == null) {
-        return classLoader;
-      }
-
-      // Wrap classloader so that it will check if class-names are white-listed before allowing them to be loaded
-      return new SecureClassLoader(classLoader)
+    private ClassLoader wrapClassLoader(final ClassLoader classLoader) {
+      log.trace("Wrapping class-loader: {}", classLoader);
+      return new ClassLoader()
       {
         @Override
+        public Class<?> loadClass(final String name) throws ClassNotFoundException {
+          if (typeWhitelist != null) {
+            typeWhitelist.ensureAllowed(name);
+          }
+          return classLoader.loadClass(name);
+        }
+
+        // ensure no sub-class of ClassLoader can subvert this check
+        @Override
         protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
-          log.trace("Load class: {}, resolve: {}", name, resolve);
-          typeWhitelist.ensureAllowed(name);
+          if (typeWhitelist != null) {
+            typeWhitelist.ensureAllowed(name);
+          }
           return super.loadClass(name, resolve);
         }
       };
