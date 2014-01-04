@@ -2218,7 +2218,7 @@ public class XStream {
      * 
      * @since 1.1.1
      */
-    public void setClassLoader(ClassLoader classLoader) {
+    public final void setClassLoader(ClassLoader classLoader) {
       classLoaderReference.setReference(wrapClassLoader(classLoader));
     }
 
