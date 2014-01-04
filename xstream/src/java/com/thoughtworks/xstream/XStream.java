@@ -565,7 +565,7 @@ public class XStream {
         ClassLoaderReference classLoaderReference, Mapper mapper, ConverterLookup converterLookup,
         ConverterRegistry converterRegistry) {
 
-        log.trace("Created", new Throwable("MARKER"));
+        log.trace("Created", new Throwable("XSTREAM-CREATE-MARKER"));
 
         // optionally enable white-list
         if (isWhitelistEnabled()) {
