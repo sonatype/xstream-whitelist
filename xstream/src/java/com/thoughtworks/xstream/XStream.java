@@ -660,7 +660,6 @@ public class XStream {
 
           // HACK: allow NX-OSS tests to pass w/o modifying sources :-(
           "org.codehaus.plexus.util.xml.Xpp3Dom",
-          "org.apache.maven.artifact.repository.metadata.Metadata",
           "org.sonatype.plexus.rest.xstream.json.CombinedValued",
           "org.sonatype.plexus.rest.xstream.json.OneValued",
           "org.sonatype.plexus.rest.xstream.json.ThreeValued",
@@ -676,7 +675,10 @@ public class XStream {
           "com.sonatype.nexus.procurement.treeview",
 
           // white-list staging api type for early 2.x compat
-          "com.sonatype.nexus.staging.api"
+          "com.sonatype.nexus.staging.api",
+
+          // HACK: allow NX-OSS tests to pass w/o modifying sources :-(
+          "org.apache.maven.artifact.repository.metadata"
       );
 
       typeWhitelist.allowPattern(
