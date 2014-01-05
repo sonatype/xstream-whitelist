@@ -598,10 +598,10 @@ public class XStream {
     }
 
     @VisibleForTesting
-    static final SystemProperty whitelistForceProperty = new SystemProperty(XStream.class, "whitelistForce");
+    public static final SystemProperty whitelistForceProperty = new SystemProperty(XStream.class, "whitelistForce");
 
     @VisibleForTesting
-    static final SystemProperty whitelistTrustedProperty = new SystemProperty(XStream.class, "whitelistTrusted");
+    public static final SystemProperty whitelistTrustedProperty = new SystemProperty(XStream.class, "whitelistTrusted");
 
     /**
      * Classes which create new XStream instances which are trusted and will have white-list disabled.

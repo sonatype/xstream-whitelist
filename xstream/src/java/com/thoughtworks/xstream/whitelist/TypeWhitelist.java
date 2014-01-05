@@ -27,16 +27,16 @@ public class TypeWhitelist
   public static final String DEFAULT_PACKAGE_NAME = "<default>";
 
   @VisibleForTesting
-  static final SystemProperty allowAllProperty = new SystemProperty(TypeWhitelist.class, "allowAll");
+  public static final SystemProperty allowAllProperty = new SystemProperty(TypeWhitelist.class, "allowAll");
 
   @VisibleForTesting
-  static final SystemProperty allowedTypesProperty = new SystemProperty(TypeWhitelist.class, "allowedTypes");
+  public static final SystemProperty allowedTypesProperty = new SystemProperty(TypeWhitelist.class, "allowedTypes");
 
   @VisibleForTesting
-  static final SystemProperty allowedPackagesProperty = new SystemProperty(TypeWhitelist.class, "allowedPackages");
+  public static final SystemProperty allowedPackagesProperty = new SystemProperty(TypeWhitelist.class, "allowedPackages");
 
   @VisibleForTesting
-  static final SystemProperty allowedPatternsProperty = new SystemProperty(TypeWhitelist.class, "allowedPatterns");
+  public static final SystemProperty allowedPatternsProperty = new SystemProperty(TypeWhitelist.class, "allowedPatterns");
 
   private final Set<String> allowedTypes = Sets.newHashSet();
 
