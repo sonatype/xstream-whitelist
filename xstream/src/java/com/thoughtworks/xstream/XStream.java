@@ -154,6 +154,7 @@ import com.thoughtworks.xstream.mapper.OuterClassMapper;
 import com.thoughtworks.xstream.mapper.PackageAliasingMapper;
 import com.thoughtworks.xstream.mapper.SystemAttributeAliasingMapper;
 import com.thoughtworks.xstream.mapper.XStream11XmlFriendlyMapper;
+import com.thoughtworks.xstream.whitelist.PomProperties;
 import com.thoughtworks.xstream.whitelist.SystemProperty;
 import com.thoughtworks.xstream.whitelist.TypeWhitelist;
 import org.slf4j.Logger;
@@ -310,6 +311,12 @@ import org.slf4j.LoggerFactory;
 public class XStream {
 
     private static Logger log = LoggerFactory.getLogger(XStream.class);
+
+    // log version and white-list support early for marking logs with patched implementation
+    static {
+      PomProperties properties = new PomProperties(XStream.class, "org.sonatype.nexus.xstream", "xstream");
+      log.info("Version: {}, white-list support available", properties.getVersion());
+    }
 
     // CAUTION: The sequence of the fields is intentional for an optimal XML output of a
     // self-serialization!
