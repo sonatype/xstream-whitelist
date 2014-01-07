@@ -663,15 +663,7 @@ public class XStream {
           "java.util.Arrays$ArrayList",
 
           // white-list some edge-case NX types
-          "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate",
-
-          // HACK: allow NX-OSS tests to pass w/o modifying sources :-(
-          "org.codehaus.plexus.util.xml.Xpp3Dom",
-          "org.sonatype.plexus.rest.xstream.json.CombinedValued",
-          "org.sonatype.plexus.rest.xstream.json.OneValued",
-          "org.sonatype.plexus.rest.xstream.json.ThreeValued",
-          "org.sonatype.plexus.rest.xstream.xml.test.DataObject1",
-          "org.sonatype.plexus.rest.xstream.xml.test.DataObject2"
+          "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate"
       );
 
       typeWhitelist.allowPackage(
@@ -684,7 +676,7 @@ public class XStream {
           // white-list staging api type for early 2.x compat
           "com.sonatype.nexus.staging.api",
 
-          // HACK: allow NX-OSS tests to pass w/o modifying sources :-(
+          // HACK: allow NX-OSS tests to pass w/o modifying sources
           "org.apache.maven.artifact.repository.metadata"
       );
 
