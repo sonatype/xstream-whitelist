@@ -648,7 +648,7 @@ public class XStream {
 
       // if the type creating new XStream is not trusted, then enable the white-list
       boolean trusted = whitelistTrusted.contains(createdFrom);
-      log.debug("White-list {} for {} usage by: {}", new Object[] {
+      log.trace("White-list {} for {} usage by: {}", new Object[] {
           (trusted ? "disabled" : "enabled"),
           (trusted ? "trusted" : "untrusted"),
           createdFrom
