@@ -644,7 +644,6 @@ public class XStream {
         createdFrom = element.getClassName();
         break;
       }
-      log.trace("Created from: {}", createdFrom);
 
       // if the type creating new XStream is not trusted, then enable the white-list
       boolean trusted = whitelistTrusted.contains(createdFrom);
