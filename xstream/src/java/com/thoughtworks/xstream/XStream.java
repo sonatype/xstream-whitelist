@@ -662,7 +662,10 @@ public class XStream {
           "java.util.Arrays$ArrayList",
 
           // white-list some edge-case NX types
-          "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate"
+          "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate",
+
+          // HACK: More junk for maven model marshalling
+          "org.codehaus.plexus.util.xml.Xpp3Dom"
       );
 
       typeWhitelist.allowPackage(
