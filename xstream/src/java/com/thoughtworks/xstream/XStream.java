@@ -676,7 +676,10 @@ public class XStream {
           "com.sonatype.nexus.staging.api",
 
           // HACK: allow NX-OSS tests to pass w/o modifying sources
-          "org.apache.maven.artifact.repository.metadata"
+          "org.apache.maven.artifact.repository.metadata",
+
+          // HACK: white-list maven model classes nexus renders these in rest asis
+          "org.apache.maven.model"
       );
 
       typeWhitelist.allowPattern(
