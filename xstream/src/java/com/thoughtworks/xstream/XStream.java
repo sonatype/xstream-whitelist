@@ -662,7 +662,10 @@ public class XStream {
           "java.util.Arrays$ArrayList",
 
           // white-list some edge-case NX types
-          "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate"
+          "com.sonatype.nexus.rest.templates.settings.M2SettingsTemplate",
+
+          // HACK: More junk for maven model marshalling
+          "org.codehaus.plexus.util.xml.Xpp3Dom"
       );
 
       typeWhitelist.allowPackage(
@@ -676,7 +679,10 @@ public class XStream {
           "com.sonatype.nexus.staging.api",
 
           // HACK: allow NX-OSS tests to pass w/o modifying sources
-          "org.apache.maven.artifact.repository.metadata"
+          "org.apache.maven.artifact.repository.metadata",
+
+          // HACK: white-list maven model classes nexus renders these in rest asis
+          "org.apache.maven.model"
       );
 
       typeWhitelist.allowPattern(
