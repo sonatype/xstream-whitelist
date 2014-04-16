@@ -23,7 +23,7 @@
   <groupId>org.sonatype.nexus.xstream</groupId>
   <artifactId>xstream-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.6-SONATYPE-SNAPSHOT</version>
+  <version>1.4.6-SONATYPE-03</version>
   <name>XStream Parent</name>
   <description>
     XStream is a serialization library from Java objects to XML and back.
@@ -122,12 +122,12 @@
       <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream</artifactId>
-        <version>1.4.6-SONATYPE-SNAPSHOT</version>
+        <version>1.4.6-SONATYPE-03</version>
       </dependency>
       <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream</artifactId>
-        <version>1.4.6-SONATYPE-SNAPSHOT</version>
+        <version>1.4.6-SONATYPE-03</version>
         <classifier>tests</classifier>
         <type>test-jar</type>
         <scope>test</scope>
@@ -135,31 +135,31 @@
       <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream</artifactId>
-        <version>1.4.6-SONATYPE-SNAPSHOT</version>
+        <version>1.4.6-SONATYPE-03</version>
         <classifier>javadoc</classifier>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-hibernate</artifactId>
-        <version>1.4.6-SONATYPE-SNAPSHOT</version>
+        <version>1.4.6-SONATYPE-03</version>
       </dependency>
       <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-hibernate</artifactId>
-        <version>1.4.6-SONATYPE-SNAPSHOT</version>
+        <version>1.4.6-SONATYPE-03</version>
         <classifier>javadoc</classifier>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-benchmark</artifactId>
-        <version>1.4.6-SONATYPE-SNAPSHOT</version>
+        <version>1.4.6-SONATYPE-03</version>
       </dependency>
       <dependency>
         <groupId>org.sonatype.nexus.xstream</groupId>
         <artifactId>xstream-benchmark</artifactId>
-        <version>1.4.6-SONATYPE-SNAPSHOT</version>
+        <version>1.4.6-SONATYPE-03</version>
         <classifier>javadoc</classifier>
         <scope>provided</scope>
       </dependency>
